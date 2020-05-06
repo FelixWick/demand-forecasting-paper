@@ -1,0 +1,539 @@
+\documentclass[BCOR=1mm, DIV=calc,10pt,
+twoside=true,
+twocolumn,
+headings=normal]{scrartcl}
+%\KOMAoptions{DIV=calc}% recalculate the page layout with a calculated DIV value
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{url}
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+
+\usepackage{authblk}
+
+
+\newcommand{\fig}{Fig. }
+\newcommand{\eqn}{Eqn. }
+\newcommand{\tab}{Tab. }
+\newcommand{\wrt}{w.r.t. }
+\newcommand{\etal}{ {\em et al. }} 
+
+
+\begin{document}
+
+
+%\title{Prediction and Evaluation of individual Probability Density Functions with Machine Learning}
+\title{Demand Forecasting of individual Probability Density Functions with Machine Learning}
+
+\author[1]{Felix Wick \thanks{felix.wick@blueyonder.com}}
+\author[2]{Ulrich Kerzel \thanks{u.kerzel@iubh-fernstudium.de}}
+\author[1]{Trapti Singhal \thanks{trapti.singhal@blueyonder.com}}
+\author[1]{Martin Hahn \thanks{martin.hahn@blueyonder.com}}
+\affil[1]{\small Blue Yonder GmbH (Karlsruhe, Germany)}
+\affil[2]{\small IUBH Internationale Hochschule (Erfurt, Germany)}
+
+
+\date{}
+
+\maketitle
+
+\begin{abstract}
+... abstract ...
+\end{abstract}
+
+{Keywords: \textbf{machine learning, demand forecasting}}
+
+
+\section{Introduction}
+
+Demand forecasting is one of the main challenges for retailers and at the core of business
+operations. Due to its stochastic nature, demand is difficult to forecast as it depends on
+many influencing factors and the realized demand can be interpreted as a random variable
+that is described by an appropriate probability density function (PDF). In order to make
+operational decisions, an optimal point estimator has to be defined that  can be used to
+derive ordering decisions used in the replenishment process of the retailer. Demand
+estimation is further complicated by the fact that retailers typically only observed
+realized sales and not the actual demand, in case the demand exceeds the current stock
+level, the data become censored. This decision process is complicated by a range of
+factors: Even in the case of accurate  demand forecasts, the decision maker has to balance
+conflicting metrics to reach an optimal decision: Ordering to few items may result in
+stockout situations resulting in unrealized demand and unsatisfied customers. Ordering too
+many items results in excess inventory which increases transport and storage costs and, in
+the case of perishable goods, excessive waste as spoilt items need to be disposed of at
+additional cost in addition to  the environmental impact. This situation is particularly
+noticeable in the so called `'ultra-fresh'' category which includes items such as bakery
+products, ready-meals, fresh diary products or certain meat products such as ground meat.
+These items typically have a shelf-life from less than a business day to a few business
+days at most with a continuous spectrum  depending on the exact item. In many situations,
+additional constraints have to be considered to reach an optimal ordering decision:
+Delivery cycles of items may vary depending on the type of item and the wholesaler or
+manufacturer from which  they are procured. Retailers also operate at a given service
+level to guarantee that a certain level of demand can be fulfilled. The exact service
+level typically depends on the overall business policy of the retailer and may also depend
+on individual products, ranging from ``never-out-of-stock'' items to a service level
+exceeding e.g. 90\%.
+
+The availability of Big Data allows capturing, storing and processing a vast amount of
+data associated with demand such as historic sales records,  information about promotional
+events or advertisements, pricing information, local weather at retail locations, seasonal
+information  as well as a wide range of further variables. Modern machine learning
+algorithms can then be used to predict the per-item demand distribution, corrected for
+censored data from which an optimal point estimator can be derived to be used in the
+subsequent ordering decision. It is important to note that demand as a random variable is
+not identically and independently distributed (i.i.d.): While the probability distribution
+describing the demand can be attributed to a given family or parametrization, the exact
+parameters vary: Seasonal effects, finite life cycles of products and the introduction of
+new products influence the demand distribution, as well as the local weather at the retail
+location or the retail location itself in terms of size, assortment range, customer
+diversity and other factors. The retailers themselves also actively influence demand by
+using advertisements to highlight products, offering rebates or discounts for specific
+products as well as pursuing an active pricing strategy. This means that while we can
+generally assume that demand follows a specific type of probabilty distribution, its
+parameters are unique to the  instance for which an estimate is required. For example, the
+probability distribution governing the demand of a particular item is specific to the
+item, date and retail location for which the forecast is made and depends on a wide range
+of further influencing factors.
+
+The remainder of the paper is organized as follows:
+We first review the relevant literature and existing work in sec. \ref{sec:LitRev}.
+We then describe our method to predict individual negative binomial PDFs by means of a
+parametric approach including two distinct machine learning models for mean of variance in
+sec. \ref{sec:pdfEstimation}.
+After that we describe methods for the qualitative and quantitative evaluation of PDF
+predictions in sec. \ref{sec:pdfEvaluation}.
+Finally, we present a demand forecasting example to show an application of our methods in
+sec. \ref{sec:example}.
+
+
+\section{Literature Review}
+\label{sec:LitRev}
+
+Inventory management offers a rich theory and the extensive body of research can be
+broadly grouped into the following two categories where the inventory control problem is
+either based on some knowledge of the underlying demand  distribution or an integrated
+approach that seeks to map directly from the available data (historic sales records and 
+further variables) to the ordering decision. The latter approach is taken e.g. in
+\cite{beutel2012safety,ban2019big,bertsimas2020predictive} and aims to avoid estimating
+the underlying probability distribution. Although this approach seems preferable since it
+avoids determining the full demand distribution and results directly in the desired
+operational decision (order quantity), it faces several drawbacks. First of all, the full
+probability distribution for the demand of an specific item at a given sales location and
+business day includes all available information including the uncertainty of the modelled
+demand. This can be used to simulate the performance on a per-item level and e.g. optimize
+the impact on business strategy decisions on conflicting metrics such as stock out- and
+waste-rate. Additionally, having the full demand probability distribution available allows
+for an accute assessment of the forecast quality at all quantiles of the distribution,
+including the often extensive tails of the distribution, as well as the analysis of
+long-term  effect as the demand predictions including all future planned advertisements or
+price-changes can be included into long-term forecasts. Furthermore, deriving the ordering
+decision  directly couples the demand process with the complex delivery cycles and
+constraints, keeping the steps separate allows greater operational flexibility and reduces
+the impact of changing manufacturers or wholesalers, as well as  allowing a quick response
+to changes in the delivery schedule wihtout having to re-compute the implicit demand
+underlying the ordering decision. Finally, long-term demand forecasts may be shared with
+other business units or external vendors  and wholesalers to ease their planning for the
+production and supply-chain processes upstream of the retailer.
+
+In contrast, more traditional inventory control systems rely on the knowledge of the
+demand distribution in one form or another.  see e.g. \cite{silver1998} for an overview.
+In $(s,S)$ type inventory control systems \cite{Scarf1958}, inventory levels are monitored
+at regular intervals and orders are dispatched once the inventory level reaches a minimal
+value $s$. In case of linear holding and shortage costs, such policies are optimal
+\cite{Scarf1959}, although perishable goods pose more challenges, see e.g.
+\cite{Nahmias1973,Nahmias1975,nahmias1978}. Additionally, service level constraints can be
+included in these kind of inventory control systems \cite{minner2010periodic}. Perishable
+goods are well described by the `'newsvendor-problem'' \cite{Edgeworth} where in the
+simplest case all stock perishes at the end of the selling period (e.g. a business day). 
+For a detailed review of the newsvendor problem see e.g. \cite{Khouja1999537}. Assuming
+linear underage and overage costs $b,h >0$, the optimal quantile
+$q_{\mathrm{opt}} = {b}/{(b+h})$ of a known demand distribution $f(D)$ can be calculated
+exactly. The main objective in any of these approaches is to determine the underlying
+demand distribution. The simplest approach is to just use the observed sales events and
+forecast these as a time-series  (see e.g. \cite{alwan2016}) or via sample average
+approximation (SAA). (see e.g. \cite{shapiro2014} for an overview over SAA). However,
+these approaches do not make use of any data apart from the sales record themselves,
+although we know that many variables such as price, advertisements, etc. are highly
+correlated with demand. Additionally, it is critical that we indeed reconstruct a demand
+distribution, hence a simple point-estimator as provided by the most common statistical
+techniques and machine-learning approaches will not suffice. Additionally, demand is not
+identically and independently distributed (i.i.d.) but depends not only on external
+factors such as season, weather, product life-cycle, but is also actively changed by the
+retailer by setting a specific price, offering rebates or running advertisements.
+Additionally, the demand implicitly depend on the location of the retail outlet as well as
+the specifics of that location such as product  assortment influencing the choice of
+possible replacement articles and many more. These complications are the main reason we
+cannot treat the replenishment process as $n$ independent newsvendor-type problems.
+Instead, we need to determine the full demand distribution from data, conditional on the
+relevant variables such as date, location and item, taking all auxiliary data such as
+article charactersitics, pricing, advertisements, retail location details, etc. into
+account. This can be done in several ways: First, we can use a neural network
+\cite{Feindt2006190} to learn the distribution from data and return a full distribution
+per item, store and day from which the relevant quantile can be estimated. Similarly,
+using quantile regression \cite{koenker2001} this approach can be implemented in different
+frameworks. Alternatively, one can assume a given demand model and fit the model
+parameters instead of reconstructing the complete distribution. This approach is
+computationally favourable, as fewer parameters need to be estimated compared to the case
+of the full distribution. Empirically, one can determine the best fitting distribution
+from data \cite{adan1995}. However, given the stochastic nature of the demand, such an
+empirically determined distribution is not expected to be stable and prone to sudden
+changes. Instead, the choice of the demand distribution should be motivated by theoretic
+considerations. The discrete demand is typically modelled as a negative binomial
+distribution (NBD), also known as Gamma-Poisson distribution
+\cite{Ehrenberg1959,Ehrenberg1967,Ehrenberg1972,Chatfield1973,Schmittlein_1985}. This
+distribution arises if the Poisson parameter $\mu$ is a random variable itself that
+follows a Gamma distribution. The NBD has two parameters, $\mu$ and $ \sigma^2 > \mu$ and
+is over-dispersed compared to the Poisson distribution for which $\mu = \sigma^2$.
+
+Hence, for each ordering decision, the model parameters $\mu$ and $\sigma$ need to be
+determined for each item at each sales location and ordering time, depending on all
+auxiliary data describing article details, retail location and influencing factors such as
+pricing and advertisement information.
+
+\subsection*{Summary of Contributions}
+What we are going to show.
+
+
+\section{Negative Binomial PDF Estimation}
+\label{sec:pdfEstimation}
+
+To predict an individual PDF by means of a parametric approach, one has to rely on a model
+assumption about the underlying distribution of the random variable to be predicted. In
+the following, we describe such a parametric approach with the model assumption of a
+negative binomial probability distribution. For a PDF prediction under a negative binomial
+model assumption, there is the need for the estimation of two parameters, for example its
+mean and its variance.
+In any case, as there is a strong correlation between mean and variance, it is beneficial to include the corresponding
+predicted mean from the mean model as feature in the variance model.
+
+This can be done using two independent models one,  to estimate the mean and the other
+for the variance. At least in principle, any method can be used. However, as argued above,
+in case of demand forecasting, each prediction is highly specific to the circumstances
+in which it is used (such as product ID, day and store location) and may
+depend on  a multitude of describing variables (features).
+Machine learning algorithms are ideally suited for this task and in the
+following we will use the ``Cyclic Boosting'' algorithm \cite{Wick2019}.
+The major benefits of this algorithm are that it is not only extremly performant in practical 
+applications of demand forecasting at large scale, but also fully explainable. Traditional machine
+learning algorithms are typically ``black box'' approaches where the individual decision cannot be 
+explained. Cyclic Boosting on the other hand allows to follow how each individual prediction was made.
+The main idea of this algorithm is the following: When used for regression,
+the predictions $\hat{y_i}$ of the  target variable $Y \in [0,\infty)$ can be calculated in the following
+way:
+\begin{equation} \label{eqn:cb}
+\hat{y}_i = \mu \cdot \prod \limits_{j=1}^p f^k_j \quad \text{with}\; k=\{ x_{j,i} \in b^k_j\}
+\end{equation}
+The parameters $f^k_j$ are the model parameters that are determined from 
+features $j$. Each feature is discretisized appropriately into $k$ bins to reflect the 
+specific behaviour of the feature. The global mean $\mu$ is determined from all observed
+target values $y$ observed in the data. The factors  $f^k_j$ are determined
+iteratively until convergence is reached and regularization techniques are applied
+to avoid overtraining and improve the generalization ability of the algorithm.
+The relative strength of the factors  $f^k_j$ are then directly interpretable in
+relation how important a specific feature is for each individual prediction where deviations
+from  $f^k_j=1$ indicate high importance.
+
+%One can achieve this with two subsequent, independent machine learning models, the first
+%to estimate the mean and the second to estimate the variance. The features may or may not
+%differ between the mean and variance estimation models. 
+
+
+The assigned mean and variance predictions can then be used to generate individual
+probability density functions according to a functional negative binomial distribution
+assumption for each sample.
+
+%While any machine learning algorithm outputting a conditional mean as prediction may be
+%used to get an approximate estimate for the mean of an underlying negative binomial
+%distribution, it is preferable to choose an algorithm using a negative binomial assumption
+%for its inner regularization methods. An example for such a machine learning algorithm is
+%Cyclic Boosting in multiplicative regression mode .
+%In the upcoming section, we describe a method to predict the variance of a negative
+%binomial PDF along with its mean individually for each sample by means of Cyclic Boosting.
+
+\subsection{Variance Estimation by Cyclic Boosting in Negative Binomial Width Mode}
+
+Cyclic Boosting in a modified form of its multiplicative regression mode, namely the
+negative binomial width mode presented in the following, can be used for the second machine
+learning model to predict the negative binomial variance associated with the mean
+predicted by the first model. 
+
+For regression, the parametrization of the negative binomial mass function
+can be specified as \cite{hilbe2011negative}:
+
+\begin{equation} \label{eqn:nbinom}
+\mathrm{NB}(y; \mu, r) = \frac{\Gamma(r + y)}{y! \cdot \Gamma(r)} \cdot \left(\frac{r}{r + \mu}\right)^r \cdot \left(\frac{\mu}{r + \mu}\right)^y,
+\end{equation}
+with mean $\mu$ and dispersion parameter $r$. The target variable $y$ takes the values $y = 0, 1, 2, ...$.
+
+The variance estimation is achieved by minimizing the loss function defined in \eqn
+\eqref{eqn:loss_likelihood}, expressed as negative log-likelihood function of a negative
+binomial distribution, with respect to $r_i$ over all input samples $i$, where the mean
+values $\hat{\mu_i}$ are fixed to the corresponding predictions from the first machine
+learning model outputting the conditional mean.
+
+\begin{equation} \label{eqn:loss_likelihood}
+L(r) = -\mathcal{L}(r) = -\ln \sum_i \mathrm{NB}(y_i; \hat{\mu_i}, r_i)
+\end{equation}
+
+As stated in \eqn \eqref{eqn:r} the values $r_i$ are defined by the Cyclic Boosting
+model parameters $f^k_j$ for each feature $j$ and bin $k$. For any concrete observation
+$i$, the index $k$ of the bin is determined by the observation of $x_{j,i}$ and the
+subsequent look-up into which bin this observation falls. The dispersion parameter $r$ is
+bound to the interval $[1, \infty]$.
+
+\textcolor{red}{Hm, this part is a bit quick. We should add a sentence to the NB loss 
+and how this is motivated and then how this is connected to \eqn \eqref{eqn:r} and how
+\eqn \eqref {eqn:cb} from CB comes into play.}
+\begin{equation} \label{eqn:r}
+r_i = 1 + \prod \limits_{j=1}^p f^k_j \quad \text{with}\; k=\{ x_{j,i} \in b^k_j\}
+\end{equation}
+
+\textcolor{red}{Hm, this part is not quite clear - need to add some details what is meant}
+As described in \cite{Wick2019}, the parameter estimation in Cyclic Boosting is an
+iterative method corresponding to a cyclic coordinate descent, processing one feature with
+all its bins at a time until convergence. Unlike in the original multiplicative regression
+mode of Cyclic Boosting, the minimization of the loss function in \eqn
+\eqref{eqn:loss_likelihood} cannot be solved analytically and requires a numerical method,
+for example a random search. All other advantages of Cyclic Boosting presented in
+\cite{cyclicboosting}, like for example individual explainability of predictions, remain
+valid for its negative binomial width mode.
+
+Finally, the variance $\hat{\sigma}^2_i$ can be calculated from the dispersion parameter
+$\hat{r_i}$ by means of \eqn \eqref{eqn:variance_r}. And so, together with the estimated
+mean parameter $\hat{\mu_i}$ from the previous mean estimation model, all parameters of
+the negative binomial distribution NB for the prediction of an individual observation $i$
+are given.
+
+\begin{equation} \label{eqn:variance_r}
+\sigma^2 = \mu + \frac{\mu^2}{r}
+\end{equation}
+
+
+\section{Evaluation of PDF Predictions}
+\label{sec:pdfEvaluation}
+
+Statistical or machine learning methods that predict full individual probability functions typically lack
+quantitative, or at least qualitative, evaluation of the PDF model output to assess its
+correctness. In the case of an estimation of the determining parameters of an assumed
+functional form for the PDF, assessing the correctness of the PDF model output refers to
+the evaluation of the accuracy of the prediction of the different determining parameters,
+e.g. mean and variance of a negative binomial distribution, and the validation of the
+model assumptions, i.e. the choice of the underlying PDF, by comparing the probability
+density estimations to observed data. However, the two methods presented in this section,
+namely cumulative distribution function (CDF) histograms and inverse quantile plots, are
+neither restricted to the evaluation of parametric PDF estimations nor to a specific
+functional form, like a negative binomial, but can be used generically.
+
+\subsection{Qualitative Evaluation of PDF Predictions}
+
+\subsubsection{CDF Histogram}
+\label{sec:cdf_histo}
+
+\textcolor{red}{need to explain intuition a bit more, a diagram would be helpful.}
+The idea here is that the individual PDF predictions are first transformed into individual
+CDF predictions and the CDF values, also known as quantiles, of the corresponding truth
+values are then filled to a histogram.
+
+\textcolor{red}{need to explain a bit more what we see and why we expect a uniform distribution.}
+Figure \eqref{fig:cdf_histos} illustrates five different CDF histograms. If the PDF
+prediction is correct, a flat uniform distribution should occur for the CDF histogram,
+like illustrated by the final far-right column of shaded circles.
+
+In the example of a parametric negative binomial PDF estimation of section
+\eqref{sec:pdfEstimation}, this would indicate that both the mean and the variance
+estimations as well as the choice of a negative binomial distribution as underlying PDF
+were correct. Conversely, the first two plots of \fig \ref{fig:cdf_histos} indicate a
+bias in the variance estimation and the third and fourth plot indicate a bias in the mean
+estimation.
+\textcolor{red}{Need to explain why we see that. Would be good to show the respective distributions
+(or at least one example) of wher it doesn't fit.}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=8cm]{../figures/cdf_histos}
+\caption{\label{fig:cdf_histos} ...}
+\end{center}
+\end{figure}
+
+\subsubsection{Inverse Quantile Plot}
+
+\textcolor{red}{We need to explain a lot more here. In particular, outside HEP the profile
+plots are not known so we need to explain that first and then explain why we want to use
+them here.}
+The idea here is that the individual PDF predictions are first transformed into individual
+CDF predictions and the CDF values, also known as quantiles, of the corresponding truth
+values are then compared (in the sense of higher or lower) to expected quantile values and
+accordingly filled to a collection of profile plots, each of which representing one
+expected quantile value.
+
+\textcolor{red}{since no reader of this paper will have seen a profile plot before or
+know what that is, we need to guide the audience step-by-step to what they should see and why it's
+correct and what each column means, how we come to the conclusion, etc.}
+\fig \ref{fig:invquant_profiles} illustrates five different collections of inverse
+quantile profile plots (each collection comparing to 7 expected quantile values), each
+with only one bin for the sake of visualization, for separate sets of exemplary
+probability density estimation and observed data combinations. Each shown line represents
+the percentage of probability density estimation and observed data combinations for which
+the observed data point should be above and below the quantile of the predicted PDF
+indicated by that line (\textcolor{red}{median?}for example, the 0.50 line indicates that 50 percent of all
+probability density estimation and observed data combinations in a given set of data
+should fall above the line, and 50 percent should fall below the line), respectively. The
+observation of the number of samples, indicated with shaded circles, that do in fact fall
+above and below a particular line, then allows the evaluation of the accuracy of
+probability density estimations. For a set of accurate PDF predictions, one expects a
+uniform shape, like illustrated by the final far-right column of shaded circles.
+
+\textcolor{red}{need to explain how one can see this}
+In the example of a parametric negative binomial PDF estimation of section
+\ref{sec:pdfEstimation}, this would indicate that both the mean and the variance
+estimations as well as the choice of a negative binomial distribution as underlying PDF
+were correct. Conversely, the leftmost two columns of shaded circles illustrate a case for
+which the variance estimation has a bias and the center and center-right columns of shaded
+circles illustrate a case for which the mean estimation has a bias.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=8cm]{../figures/invquant_profiles}
+\caption{\label{fig:invquant_profiles} ...}
+\end{center}
+\end{figure}
+
+The two advantages of this method, as compared to the simpler method presented in section
+\ref{sec:cdf_histo}, are that an inverse quantile plot supports the qualitative evaluation
+of the predicted individual PDFs not only globally but (1) for different specified
+quantiles (potentially hinting to deviations in e.g. the tails of the distributions) and
+(2) in dependence of arbitrary variables of the data set (potentially hinting to
+deviations in e.g. specific categories of a feature). Two examples for this can be found
+in figures \ref{fig:invquant_mean} and \ref{fig:invquant_pg} in the next section.
+
+\subsection{Quantitative Evaluation of PDF Predictions}
+
+The methods described so far allow a detailed qualitative evaluation of PDF predictions.
+However, in order to also quantify the quality of the PDF predictions, a measure of the
+deviation of the PDF predictions from the optimal outcome given the observed target data
+is needed. To achieve this, we compare the CDF histogram of the predicted PDFs with the
+uniform distribution and define a prediction accuracy interval between 0 and 1.
+
+Several different methods can be used to compute the deviance between two probability
+distributions. Good choices are the \textbf{Wasserstein metric} \cite{olkin1982}, a
+distance function defined between two probability distributions on a given metric space
+(also known as earth mover’s distance), and the \textbf{Kullback-Leibler divergence}
+\cite{kullback1951}, a measure of how one probability distribution diverges from a second
+expected probability distribution. The first has the advantage that, unlike the second, it
+takes an underlying metric space into account, meaning that it depends on the distance of
+potential deviations.
+
+
+\section{Example: Demand Forecasting}
+\label{sec:example}
+
+... predict an individual demand volume for different product-location-date combinations ...
+... example showing full prediction and evaluation chain ...
+
+... plot showing individual PDF example ...
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=8cm]{../figures/pdf_example}
+%\caption{\label{fig:pdf_example} ...}
+%\end{center}
+%\end{figure}
+
+... plot showing cdf histo ...
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=8cm]{../figures/cdf_demand}
+%\caption{\label{fig:cdf_demand} ...}
+%\end{center}
+%\end{figure}
+
+... plot showing invquant profile for mean prediction on X-axis ...
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=8cm]{../figures/invquant_mean}
+%\caption{\label{fig:invquant_mean} ...}
+%\end{center}
+%\end{figure}
+
+... plot showing invquant profile for product groups on X-axis ...
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=8cm]{../figures/invquant_pg}
+%\caption{\label{fig:invquant_pg} ...}
+%\end{center}
+%\end{figure}
+
+
+
+...
+
+
+\bibliography{paper}
+\bibliographystyle{ieeetr}
+
+%%
+%% Appendices
+%%
+\appendix
+
+\section{Profile Histograms}
+In many cases, scatter plots are used to study the behaviour of two distributions or sets of data points visually. 
+However, even for moderate amount of data, this approach becomes quickly difficult.
+To illustrate this, a sample of $(x,y)$ data points was obtained in the following way:
+The distribution of $x$ values was obtained by generating 5,000 samples of Gaussian
+distributed random numbers $X \sim {\cal N}(0.0,2.0)$ and the $y$ values are obtained via $Y \sim X +  {\cal N}(2.0,1.5)$.
+\fig \ref{fig:scatter} shows the marginal distributions for $x$ and $y$ as well as a scatter plot of $x$ vs. $y$.
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.5]{../figures/marginal} \includegraphics[scale=0.5]{../figures/scatter} 
+\caption{\label{fig:scatter} Marginal distribution and scatter plot of variables $X$ and $Y$.}
+\end{center}
+\end{figure} 
+
+Although the simple linear correlation between $X$ and $Y$ is apparent in the scatter plot, finer details are not
+visible and it is easy to imagine that a more complex relationship is difficult to discern.
+Profile histograms are specifically designed to address this shortcomming. Intuitively, profile
+histograms are a one-dimensional representation of the two-dimensional scatter plot and are obtained 
+in the following way: The variable on the $x$ axis is discretizised into a suitable range of bins.
+The exact choice of binning depends on the problem at hand. One can for example choose equidistant bins
+in the range of the $x$ axis or non-equidistant bins such that each bin contains the same number of observations.
+Then within each bin of the variable $X$, the a location and dispersion metric is calculated for the variable $Y$.
+This means that the bin-borders on the $X$ axis are used as constraints on the variable $Y$ and with these
+conditions applied, for example the sample mean of the selected $y$ values as well as the standard deviation
+are calculated.
+These location and dispersion metrics in each bin of $X$ are used to illustrate the behaviour of the variable $Y$
+as the values of the variable $X$ change from bin to bin.
+The resulting profile histogram is shown in \fig \ref{fig:profile}. This one-dimensional representation
+allows to understand even a complex relationship between two variables visually. Note
+that due to few data points at the edges of the distributions the profile histogram is expected
+to show visual artifacts in the corresponding regions.
+ \begin{figure}
+\begin{center}
+\includegraphics[scale=0.5]{../figures/profile}
+\caption{\label{fig:profile} Profile histogram of variables $X$ and $Y$.}
+\end{center}
+\end{figure} 
+
+
+
+
+
+\end{document}
