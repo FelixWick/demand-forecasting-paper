@@ -211,13 +211,34 @@ Evaluating the full probability function in the simplest case, where we have onl
 
 We therefore proceed as follows: First, each individual predicted probability density distribution is transformed to its cumulative density distribution. In the example of the granularity from above, we would then have a CDF for each predicted PDF for each product, sales day, and sales location. The CDF values, also known as quantiles, of the corresponding truth values are then compared (in the sense of higher or lower) to expected quantile values and accordingly filled to a collection of profile plots, each of which representing one expected quantile value.
 
-\textcolor{red}{Need for more explanations}
+Cyclic Boosting addresses the challenge of prediction explainability on a fundamental level. Rather than relying on black box approaches, individual predictions $\hat{y_i}$ for single
+observations should not only be accurate but also explainable. Strength and significance of
+each feature variable contributing to the prediction can be explained using profile plots.
 
-\fig \ref{fig:invquant_profiles} illustrates five different collections of inverse quantile profile plots (each collection comparing to 7 expected quantile values), each with only one bin for the sake of visualization, for separate sets of exemplary probability density estimation and observed data combinations. Each shown line represents the percentage of probability density estimation and observed data combinations for which the observed data point should be above and below the quantile of the predicted PDF indicated by that line (for example, the 0.50 line, corresponding to the median, indicates that 50 percent of all probability density estimation and observed data combinations in a given set of data should fall above the line, and 50 percent should fall below the line), respectively. The observation of the number of samples, indicated with shaded circles, that do in fact fall above and below a particular line, then allows the evaluation of the accuracy of probability density estimations. For a set of accurate PDF predictions, one expects a uniform shape, like illustrated by the final far-right column of shaded circles.
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=8cm]{Profile_plots.png}
+    \caption{}
+     \label{fig:Profile Plots}
+\end{figure}
 
-\textcolor{red}{need to explain how one can see this}
+Figure 3 shows analysis of the profile plots for feature variable ”item” after the
+final iteration. The shown data points indicate mean values of prediction $\hat{y}$ and ground truth y for each bin divided by the global mean (prediction hardly visible due to good agreement). Note that the smoothed factors shown here are influenced by correlations to all other features in the model as well. This visualization directly
+indicates possible deviations from the optimal fit results
+in the different bins. Here, no significant deviations are
+present across the whole range of values. Furthermore,
+the smoothed values of the factors, i.e. the actual fitted
+parameters of the model, are shown. These differ from the
+mean values of the target and prediction in the different
+bins divided by the global mean due to correlations with
+other features. Right hand side plot in Figure 3 indicate values of prediction $\hat{y}$ and ground truth y where maximum points should fall on diagonal.
+The idea here is that the individual PDF predictions are first transformed into individual
+CDF predictions and the CDF values, also known as quantiles, of the corresponding truth
+values are then compared (in the sense of higher or lower) to expected quantile values and
+accordingly filled to a collection of profile plots, each of which representing one
+expected quantile value.
 
-In the example of a parametric negative binomial PDF estimation of section \ref{sec:pdfEstimation}, this would indicate that both the mean and the variance estimations as well as the choice of a negative binomial distribution as underlying PDF were correct. Conversely, the leftmost two columns of shaded circles illustrate a case for which the variance estimation has a bias and the center and center-right columns of shaded circles illustrate a case for which the mean estimation has a bias.
+\fig \ref{fig:invquant_profiles} illustrates five different collections of inverse quantile profile plots (each collection comparing to 7 expected quantile values), each with only one bin for the sake of visualization, for separate sets of exemplary probability density estimation and observed data combinations. Each shown line represents the percentage of probability density estimation and observed data combinations for which the observed data point should be above and below the quantile of the predicted PDF indicated by that line (for example, the 0.50 line, corresponding to the median, indicates that 50 percent of all probability density estimation and observed data combinations in a given set of data should fall above the line, and 50 percent should fall below the line), respectively. The observation of the number of samples, indicated with shaded circles, that do in fact fall above and below a particular line, then allows the evaluation of the accuracy of probability density estimations. For a set of accurate PDF predictions, one expects a uniform shape, like illustrated by the final far-right column of shaded circles. Here all shaded circles are exactly falling on the line which indicates that both the mean and the variance estimations as well as the choice of a negative binomial distribution as underlying PDF were correct. Conversely, the leftmost two columns of shaded circles illustrate a case for which the variance estimation has a bias and the center and center-right columns of shaded circles illustrate a case for which the mean estimation has a bias.
 
 \begin{figure}
 \begin{center}
@@ -232,9 +253,20 @@ The two advantages of this method, as compared to the simpler method presented i
 
 The methods described so far allow a detailed qualitative evaluation of PDF predictions. However, in order to also quantify the quality of the PDF predictions, a measure of the deviation of the PDF predictions from the optimal outcome given the observed target data is needed. To achieve this, we compare the CDF histogram of the predicted PDFs with the uniform distribution and define a prediction accuracy interval between 0 and 1.
 
-Several different methods can be used to compute the deviance between two probability distributions. Good choices are the \textbf{Wasserstein metric} \cite{olkin1982}, a distance function defined between two probability distributions on a given metric space (also known as earth mover’s distance), and the \textbf{Kullback-Leibler divergence} \cite{kullback1951}, a measure of how one probability distribution diverges from a second expected probability distribution. The first has the advantage that, unlike the second, it takes an underlying metric space into account, meaning that it depends on the distance of potential deviations.
+Several different methods can be used to compute the deviance between two probability distributions. Good choices are the \textbf{Wasserstein metric} \cite{olkin1982}, a distance function defined between two probability distributions on a given metric space (also known as earth mover’s distance), which is defined by
 
-\textcolor{red}{Need to add some formulas.}
+\begin{equation}
+{\displaystyle W_{p}(\mu ,\nu)=\left(\inf \operatorname {E} {\big [}d(X,Y)^{p}{\big ]}\right)^{1/p},}
+\end{equation}
+
+(where ${{E}[Z]}$ denotes the expected value of a random variable Z and the infimum is taken over all joint distributions of the random variables X and Y with marginals ${\mu}$ and ${\nu}$  respectively) and the \textbf{Kullback-Leibler divergence} \cite{kullback1951}, a measure of how one probability distribution diverges from a second expected probability distribution. For  probability distributions P and Q defined on the same probability space, ${\displaystyle {\mathcal {X}}}$, the Kullback–Leibler divergence from Q to P is defined as
+
+\begin{equation}
+{\displaystyle D_{\text{KL}}(P\parallel Q)=\sum _{x\in {\mathcal {X}}}P(x)\log \left({\frac {P(x)}{Q(x)}}\right)}
+\end{equation}
+
+The first has the advantage that, unlike the second, it takes an underlying metric space into account, meaning that it depends on the distance of potential deviations.
+
 
 
 \section{Example: Demand Forecasting}
