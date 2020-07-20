@@ -7,7 +7,7 @@ headings=normal]{scrartcl}
 % Recommended, but optional, packages for figures and better typesetting:
 \usepackage{microtype}
 \usepackage{graphicx}
-\usepackage{subfigure}
+%\usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
 
 \usepackage{amsmath}
@@ -19,7 +19,7 @@ headings=normal]{scrartcl}
 
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage{algorithmic}
+%\usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
@@ -31,7 +31,7 @@ headings=normal]{scrartcl}
 \newcommand{\eqn}{Eqn. }
 \newcommand{\tab}{Tab. }
 \newcommand{\wrt}{w.r.t. }
-\newcommand{\etal}{ {\em et al. }} 
+\newcommand{\etal}{ {\em et al. }}
 
 
 \begin{document}
@@ -52,7 +52,7 @@ headings=normal]{scrartcl}
 \maketitle
 
 \begin{abstract}
-... abstract ...
+Demand forecasting is a central component for many aspects of supply chain operations, as it provides crucial input for subsequent decision making like ordering processes. While machine learning methods can significantly improve prediction accuracy over traditional time series forecasting, the calculated predictions are often mere point estimations for the conditional mean of the underlying random distribution, and the most powerful approaches, like deep learning, are usually opaque in terms of how its individual predictions can be interpreted. We present an extension to our earlier work on a supervised machine learning method called Cyclic Boosting to predict full individual probability density functions in form of negative binomial distributions, that are fully explainable on the individual prediction level. Also, we describe new techniques for both qualitative and quantitative evaluation of predicted probability density functions by comparison with observed data.
 \end{abstract}
 
 {Keywords: \textbf{machine learning, demand forecasting}}
@@ -72,9 +72,9 @@ The remainder of the paper is organized as follows: We first review the relevant
 
 Inventory management offers a rich theory and the extensive body of research can be broadly grouped into two categories, where the inventory control problem is either based on some knowledge of the underlying demand  distribution or an integrated approach that seeks to map directly from the available data (historic sales records and further variables) to the ordering decision. This approach is often referred to as "data-driven newsvendor'' and discussed  e.g. in \cite{beutel2012safety,ban2019big,bertsimas2020predictive, oroojlooyjadid2020applying}. It aims to avoid estimating the underlying probability distribution and use the available data to derive the operational decisions directly.  An overview of a range approaches can also be found in \cite{huber2019data}.
 
-Although this approach seems preferable, since it avoids determining the full demand distribution and results directly in the desired operational decision (the order quantity), it faces several drawbacks. First of all, the full probability distribution for the demand of a specific item at a given sales location and business day includes all available information including the uncertainty of the modelled demand. This can be used to simulate the performance on a per-item level and e.g. optimize the impact on business strategy decisions on conflicting metrics such as stock out- and waste-rate. Additionally, having the full demand probability distribution available allows for an accurate assessment of the forecast quality of all quantiles of the distribution, including the often extensive tails of the distribution. Separating the demand forecast from the operational decisions (i.e. calculating the  order quantities for the next delivery cycle) also allows to evaluate longer-term planning or counterfactual analysis to investigate how the demand would have been had the input variables had different values. This way, effects of promotions, advertisements or price-changes can be analyzed  with the same model that is used for operational decisions. Furthermore, deriving the ordering decision directly couples the demand process with the complex delivery cycles and constraints, while keeping the steps separate allows greater operational flexibility and reduces the impact of changing manufacturers or wholesalers, as well as  allowing a quick response to changes in the delivery schedule without having to re-compute the implicit demand underlying the ordering decision. Finally, long-term demand forecasts may be shared with other business units or external vendors  and wholesalers to ease their planning for the production and supply-chain processes upstream of the retailer. From the perspective of industrial practice, modelling the demand separately from deriving the subsequent orders  has the additional benefit that multiple retail chains can benefit from any improvement in the model description even if the concrete retailers are unrelated to each other. For example, if a particular effect was identified at some retailer A and included in the machine learning model, the improvement can be rolled out immediately or on request to all other retailers using this system on a planetary scale without having to adapt the underlying machine learning model for each retailer individually.
+Although this approach seems preferable at first glance, since it avoids determining the full demand distribution and results directly in the desired operational decision (the order quantity), it faces several drawbacks. First of all, the full probability distribution for the demand of a specific item at a given sales location and business day includes all available information including the uncertainty of the modelled demand. This can be used to simulate the performance on a per-item level and e.g. optimize the impact on business strategy decisions on conflicting metrics such as stock out- and waste-rate. By forecasting the full demand distribution as opposed to point estimators such as the expected demand or the median of the distribution, the forecast quality can be evaluated for quantiles of the distribution, including the often extensive tails of the distribution. Additionally, a purely data-driven approach going from the observed data directly to the operational decision (such as the order quantity) does not allow to analyze the data-generating process, i.e. the mechanism behind the stochastic behavior of the customer demand. However, modelling demand directly is vital if a causal analysis is planned at a later stage or independently, for example to study the effect promotions, advertisements,  price changes or other influencing factors in either Pearl's do-calculus \cite{PearlCausality} or Rubin's potential outcomes framework \cite{rubin1974estimating}. Using an operational quantity such as the order quantity will in most cases be an insufficient proxy of the quantity of interest (customer demand) and likely lead to unnecessary causal pathways that may not be able to be fully controlled for. From a practical perspective, separating the demand forecast from the operational decisions (i.e. calculating the  order quantities for the next delivery cycle) also allows to evaluate longer-term planning and reduces the complexity as it avoids coupling the complex delivery schedules of multiple wholesalers and manufacturers with the forecast of customer demand. This also allows to share long-term demand predictions with other business units or external vendors  and wholesalers to ease their planning for the production and supply-chain processes upstream of the retailer. From the perspective of industrial practice, modelling the demand separately from deriving the subsequent orders  has the additional benefit that multiple retail chains can benefit from any improvement in the model description even if the concrete retailers are unrelated to each other. For example, if a particular effect was identified at some retailer A and included in the machine learning model, the improvement can be rolled out immediately or on request to all other retailers using this system on a planetary scale without having to adapt the underlying machine learning model for each retailer individually.
 
-In contrast to the direct mapping the observed data to ordering decisions, more traditional inventory control systems rely on the knowledge of the demand distribution in one form or another, see e.g. \cite{silver1998} for an overview. In $(s,S)$ type inventory control systems \cite{Scarf1958}, inventory levels are monitored at regular intervals and orders are dispatched once the inventory level reaches a minimal value $s$. In case of linear holding and shortage costs, such policies are optimal \cite{Scarf1959}, although perishable goods pose more challenges, see e.g. \cite{Nahmias1973,Nahmias1975,nahmias1978}. Additionally, service level constraints can be included in these kind of inventory control systems \cite{minner2010periodic}. Perishable goods are well described by the "newsvendor-problem'' \cite{Edgeworth}, where in the simplest case all stock perishes at the end of the selling period (e.g. a business day). For a detailed review of the newsvendor problem see e.g. \cite{Khouja1999537}. Assuming linear underage and overage costs $b,h >0$, the optimal quantile $q_{\mathrm{opt}} = {b}/{(b+h})$ of a known demand distribution $f(D)$ can be calculated exactly. 
+In contrast to the direct mapping the observed data to ordering decisions, more traditional inventory control systems rely on the knowledge of the demand distribution in one form or another, see e.g. \cite{silver1998} for an overview. In $(s,S)$ type inventory control systems \cite{Scarf1958}, inventory levels are monitored at regular intervals and orders are dispatched once the inventory level reaches a minimal value $s$. In case of linear holding and shortage costs, such policies are optimal \cite{Scarf1959}, although perishable goods pose more challenges, see e.g. \cite{Nahmias1973,Nahmias1975,nahmias1978}. Additionally, service level constraints can be included in these kind of inventory control systems \cite{minner2010periodic}. Perishable goods are well described by the "newsvendor-problem'' \cite{Edgeworth}, where in the simplest case all stock perishes at the end of the selling period (e.g. a business day). For a detailed review of the newsvendor problem see e.g. \cite{Khouja1999537}. Assuming linear underage and overage costs $b,h >0$, the optimal quantile $q_{\mathrm{opt}} = {b}/{(b+h})$ of a known demand distribution $f(D)$ can be calculated exactly.
 
 The main objective in any of these approaches is to determine the underlying demand distribution. The simplest approach is to just use the observed sales events and forecast these as a time series (see e.g. \cite{alwan2016}) or via sample average approximation (SAA), see e.g. \cite{shapiro2014} for an overview. However, these approaches do not make use of any data apart from the sales record themselves, although we know that many variables such as price or advertisements influence, and therefore are highly correlated with, the demand. Saghafian and Tomlin \cite{saghafian2016newsvendor} propose to include partial information about the distribution in the derivation of the operational decision, i.e. the  calculation of the optimal order quantity.
 
@@ -94,25 +94,45 @@ Additionally, we show how the cumulative distribution function (CDF) or inverse 
 
 To predict an individual PDF by means of a parametric approach, one has to rely on a model assumption about the underlying distribution of the random variable to be predicted. In the following, we describe such a parametric approach with the model assumption of a negative binomial probability distribution. For a PDF prediction under a negative binomial model assumption, there is the need for the estimation of two parameters, for example its mean and its variance.
 
-This can be done using two independent models, one to estimate the mean and the other for the variance. At least in principle, any method can be used. However, as argued above, in the case of demand forecasting, each prediction is highly specific to the circumstances in which it is used (such as product ID, date, and store location) and may depend on  a multitude of describing variables (features). Machine learning algorithms are ideally suited for this task and in the following we will use the Cyclic Boosting algorithm. The major benefits of this method are that it is not only extremely performant in practical applications of demand forecasting at large scale, but also fully explainable. Traditional machine learning algorithms are typically "black box'' approaches, where the individual decision cannot be explained. Cyclic Boosting on the other hand allows to follow how each individual prediction was made. The main idea of this algorithm is the following: When used for regression, the predictions $\hat{y_i}$ of the  target variable $Y \in [0,\infty)$ can be calculated in the following way:
+This can be done using two independent models, one to estimate the mean and the other for the variance. At least in principle, any method can be used. However, as argued above, in the case of demand forecasting, each prediction is highly specific to the circumstances in which it is used (such as product ID, date, and store location) and may depend on  a multitude of describing variables (features). Machine learning algorithms are ideally suited for this task and in the following we will use the Cyclic Boosting algorithm.
+
+This means we use two subsequent, independent Cyclic Boosting models in order to estimate individual PDFs, the first to estimate the mean and the second to estimate the variance. The features may or may not differ between the mean and variance estimation models. But in any case, as there is a strong correlation between mean and variance, it is beneficial to include the corresponding predicted mean from the mean model as feature in the variance model. The assigned mean and variance predictions can then be used to generate individual PDFs according to a functional negative binomial distribution assumption for each sample. While any machine learning algorithm outputting a conditional mean as prediction may be used to get an approximate estimate for the mean of an underlying negative binomial distribution, it is preferable to choose an algorithm using a negative binomial assumption for its inner regularization methods, like Cyclic Boosting in multiplicative regression mode.
+
+In the following, after a brief recap of the fundamental ideas of Cyclic Boosting, we describe a method to predict the variance of a negative binomial PDF along with its mean individually for each sample by means of Cyclic Boosting.
+
+\subsection{Cyclic Boosting Recap}
+\label{sec:CB}
+
+In our earlier work \cite{Wick2019}, we have presented a new machine learning algorithm, Cyclic Boosting, which can be categorized as a generalized additive model with a cyclic coordinate descent optimization featuring a boosting-like update of parameters. The major benefits of Cyclic Boosting are that it is not only extremely performant in practical applications, like demand forecasting, at large scale, but also fully explainable. Traditional machine learning algorithms are typically "black box'' approaches, where the individual decision cannot be explained. Cyclic Boosting on the other hand allows to follow how each individual prediction was made. The main idea of this algorithm is the following: When used for regression, denoted as multiplicative regression mode, the predictions $\hat{y_i}$ of the  target variable $Y \in [0,\infty)$ can be calculated in the following way:
 
 \begin{equation} \label{eqn:cb}
 \hat{y}_i = \mu \cdot \prod \limits_{j=1}^p f^k_j \quad \text{with}\; k=\{ x_{j,i} \in b^k_j\}
 \end{equation}
 
-The parameters $f^k_j$ are the model parameters that are determined from features $j$. Each feature is discretized appropriately into $k$ bins to reflect the specific behaviour of the feature. The global mean $\mu$ is determined from all target values $y$ observed in the data. The factors $f^k_j$ are determined iteratively until convergence is reached and regularization techniques are applied to avoid overfitting and improve the generalization ability of the algorithm. The relative strength of the factors  $f^k_j$ are then directly interpretable in relation to how important a specific feature is for each individual prediction, where deviations from  $f^k_j=1$ indicate high importance.
+The values $f^k_j$ are the model parameters that are determined from features $j$. Each feature is discretized appropriately into $k$ bins to reflect the specific behaviour of the feature. The global mean $\mu$ is determined from all target values $y$ observed in the data. The factors $f^k_j$ are determined iteratively until convergence is reached and regularization techniques are applied to avoid overfitting and improve the generalization ability of the algorithm. The deviations of the different factors from $f^k_j=1$ are then directly interpretable in terms of how much a specific feature contributes to each individual prediction.
 
-\textcolor{red}{Need for some details on Cyclic Boosting training process}
-
-For the PDF estimation, two subsequent, independent Cyclic Boosting models are used, the first to estimate the mean and the second to estimate the variance. The features may or may not differ between the mean and variance estimation models. But in any case, as there is a strong correlation between mean and variance, it is beneficial to include the corresponding predicted mean from the mean model as feature in the variance model. The assigned mean and variance predictions can then be used to generate individual PDFs according to a functional negative binomial distribution assumption for each sample.
-
-While any machine learning algorithm outputting a conditional mean as prediction may be used to get an approximate estimate for the mean of an underlying negative binomial distribution, it is preferable to choose an algorithm using a negative binomial assumption for its inner regularization methods, like Cyclic Boosting in multiplicative regression mode.
-
-In the upcoming section, we describe a method to predict the variance of a negative binomial PDF along with its mean individually for each sample by means of Cyclic Boosting.
+The following meta-algorithm is used to determine the model parameters $f^k_j$ from the training data:
+\begin{enumerate}
+\item{Calculate the global average $\mu$ from all observed $y$ across all bins $k$ and
+features $j$.}
+\item{Initialize the factors $f^k_j \leftarrow 1$}
+\item{Cyclically iterate through features $j = 1,...,p $ and calculate in turn for each bin $k$ the partial factors $g$ and corresponding aggregated factors $f$, where indices $t$ (current iteration) and $\tau$ (current or preceding iteration) refer to iterations of full feature cycles as the training of the algorithm progresses:
+\begin{equation} \label{factors}
+g^k_{j,t} = \frac{\sum \limits_{x_{j,i} \in b^k_j} y_i}{\sum \limits_{x_{j,i} \in b^k_j} \hat{y}_{i,\tau}}
+\;\; \mathrm{where} \; \; f^k_{j,t} = \prod \limits_{s=1}^t g^k_{j,s}
+\end{equation}
+This means $g$ is the factor that is multiplied to $f_{t-1}$ in each iteration. Here, $\hat{y}_\tau$ is calculated according to eqn. \ref{eqn:cb} with the current values of the aggregated factors $f$:
+\begin{equation} \label{factors3}
+\hat{y}_{i,\tau} = \mu \cdot \prod \limits_{j=1}^p f^k_{j,\tau}
+\end{equation}
+To be precise, the determination of $g^k_{j,t}$ for a specific feature $j$ employs $f^k_{j,t-1}$ in the calculation of $\hat{y}$. For the factors of all other features, the newest available values are used, i.e., depending on the sequence of features in the algorithm, either from the current ($\tau=t$) or the preceding iteration ($\tau=t-1$).
+}
+\item{Quit when stopping criteria, e.g. the maximum number of iterations or no further improvement of an error metric such as the mean absolute deviation (MAD) or mean squared error (MSE), are met at the end of a full feature cycle.}
+\end{enumerate}
 
 \subsection{Variance Estimation by Cyclic Boosting in Negative Binomial Width Mode}
 
-Cyclic Boosting in a modified form of its multiplicative regression mode, namely the negative binomial width mode presented in the following, can be used for the second machine learning model to predict the negative binomial variance associated with the mean predicted by the first model.
+Cyclic Boosting in a modified form of its multiplicative regression mode (briefly described in sec. \ref{sec:CB}), namely the negative binomial width mode presented in the following, can be used for the second machine learning model to predict the negative binomial variance associated with the mean predicted by the first model.
 
 For regression, the parametrization of the negative binomial mass function can be specified as \cite{hilbe2011negative}:
 
@@ -122,7 +142,7 @@ For regression, the parametrization of the negative binomial mass function can b
 
 with mean $\mu$ and dispersion parameter $r$. The target variable $y$ takes the values $y = 0, 1, 2, ...$.
 
-The variance estimation is achieved by minimizing the loss function defined in \eqn \eqref{eqn:loss_likelihood}, expressed as negative log-likelihood function of a negative binomial distribution, with respect to $r_i$ over all input samples $i$, where the mean values $\hat{\mu_i}$ are fixed to the corresponding predictions from the first machine learning model outputting the conditional mean.
+The variance estimation is achieved by minimizing the loss function defined in \eqn \eqref{eqn:loss_likelihood}, expressed as negative log-likelihood function of a negative binomial distribution, with respect to the Cyclic Boosting parameters $f^k_j$, constituting the model of $r_i$ according to  \eqn \eqref{eqn:r}, over all input samples $i$, where the mean values $\hat{\mu_i}$ are fixed to the corresponding predictions from the first machine learning model outputting the conditional mean.
 
 \begin{equation} \label{eqn:loss_likelihood}
 L(r) = -\mathcal{L}(r) = -\ln \sum_i \mathrm{NB}(y_i; \hat{\mu_i}, r_i)
@@ -133,8 +153,6 @@ As stated in \eqn \eqref{eqn:r}, the values $r_i$ are defined by the Cyclic Boos
 \begin{equation} \label{eqn:r}
 r_i = 1 + \prod \limits_{j=1}^p f^k_j \quad \text{with}\; k=\{ x_{j,i} \in b^k_j\}
 \end{equation}
-
-\textcolor{red}{Need for more details.}
 
 As described in \cite{Wick2019}, the parameter estimation in Cyclic Boosting is an iterative method corresponding to a cyclic coordinate descent, processing one feature with all its bins at a time until convergence. Unlike in the original multiplicative regression mode of Cyclic Boosting, the minimization of the loss function in \eqn \eqref{eqn:loss_likelihood} cannot be solved analytically and requires a numerical method, for example a random search. All other advantages of Cyclic Boosting, like for example individual explainability of predictions, remain valid for its negative binomial width mode.
 
@@ -226,7 +244,7 @@ The two advantages of this method, as compared to the simpler method presented i
 
 The methods described so far allow a detailed qualitative evaluation of PDF predictions. However, in order to also quantify the quality of the PDF predictions, a measure of the deviation of the PDF predictions from the optimal outcome given the observed target data is needed. To achieve this, we compare the CDF histogram of the predicted PDFs with the uniform distribution and define a prediction accuracy interval between 0 and 1. Several different methods can be used to compute the deviance between two probability distributions. Good choices are the \textbf{1st Wasserstein distance} \cite{olkin1982}, the \textbf{Kullback-Leibler divergence} \cite{kullback1951}, and the \textbf{Jensen-Shannon divergence}  \cite{dagan1997}.
 
-The 1st Wasserstein distance, also known as earth mover'€™s distance (EMD), represents a distance function defined between two probability distributions on a given metric space, and for our purposes here can defined by
+The 1st Wasserstein distance, also known as earth mover distance (EMD), represents a distance function defined between two probability distributions on a given metric space, and for our purposes here can defined by
 
 \begin{equation}
 \text{EMD}(P, Q) = 2 \cdot \frac{\sum_{k=1}^N |F_P(x_k) - F_Q(x_k)|}{N},
@@ -234,7 +252,7 @@ The 1st Wasserstein distance, also known as earth mover'€™s distance (EMD), repr
 
 where $F_P(X)$ and $F_Q(X)$ are the CDFs of the two PDFs $P(X)$ and $Q(X)$, respectively, and $x_k$ denotes the average value of $X$ in bin $k$, with $X$ being divided in $N$ bins.
 
-The Kullback-Leibler divergence is a measure of how one probability distribution diverges from a second expected probability distribution. For PDFs $P(X)$ and $Q(X)$, again with $X$ being divided in $N$ bins $k$, the Kullback-“Leibler divergence from Q to P is defined as
+The Kullback-Leibler divergence is a measure of how one probability distribution diverges from a second expected probability distribution. For PDFs $P(X)$ and $Q(X)$, again with $X$ being divided in $N$ bins $k$, the Kullback-Leibler divergence from Q to P is defined as
 
 \begin{equation}
 D_{\text{KL}}(P \parallel Q) = \sum _{k=1}^N P(x_k) \log \left({\frac{P(x_k)}{Q(x_k)}}\right),
@@ -258,43 +276,75 @@ The EMD has the advantage over the mentioned divergences that it takes an underl
 
 \textcolor{red}{... predict an individual demand volume for different product-location-date combinations ...}
 
-\textcolor{red}{... example showing full prediction and evaluation chain ...}
+\subsection{Mean Estimation}
 
-\textcolor{red}{... plot showing individual PDF example ...}
+...
 
-%\begin{figure}
-%\begin{center}
+\begin{figure}
+\begin{center}
+%\includegraphics[width=8cm]{../figures/cb_mean}
+\caption{\label{fig:cb_mean} 2 CB analysis plots for mean model}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+%\includegraphics[width=8cm]{../figures/mean_prediction}
+\caption{\label{fig:mean_prediction} time series of mean prediction and actuals for 2 product groups}
+\end{center}
+\end{figure}
+
+\subsection{Variance Estimation and PDF Predictions}
+
+...
+
+\begin{figure}
+\begin{center}
+%\includegraphics[width=8cm]{../figures/cb_var}
+\caption{\label{fig:cb_var} 2 CB analysis plots for variance model}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
 %\includegraphics[width=8cm]{../figures/pdf_example}
-%\caption{\label{fig:pdf_example} ...}
-%\end{center}
-%\end{figure}
+\caption{\label{fig:pdf_example} PDF example}
+\end{center}
+\end{figure}
 
-\textcolor{red}{... plot showing cdf histo ...}
+\subsection{Evaluation of PDF Predictions}
 
-%\begin{figure}
-%\begin{center}
+...
+
+\begin{figure}
+\begin{center}
 %\includegraphics[width=8cm]{../figures/cdf_demand}
-%\caption{\label{fig:cdf_demand} ...}
-%\end{center}
-%\end{figure}
+\caption{\label{fig:cdf_demand} CDF histogram}
+\end{center}
+\end{figure}
 
-\textcolor{red}{... plot showing invquant profile for mean prediction on X-axis ...}
-
-%\begin{figure}
-%\begin{center}
+\begin{figure}
+\begin{center}
 %\includegraphics[width=8cm]{../figures/invquant_mean}
-%\caption{\label{fig:invquant_mean} ...}
-%\end{center}
-%\end{figure}
+\caption{\label{fig:invquant_mean} invquant profile for mean prediction on X-axis}
+\end{center}
+\end{figure}
 
-\textcolor{red}{... plot showing invquant profile for product groups on X-axis ...}
-
-%\begin{figure}
-%\begin{center}
+\begin{figure}
+\begin{center}
 %\includegraphics[width=8cm]{../figures/invquant_pg}
-%\caption{\label{fig:invquant_pg} ...}
-%\end{center}
-%\end{figure}
+\caption{\label{fig:invquant_pg} invquant profile for product groups on X-axis}
+\end{center}
+\end{figure}
+
+... quantitative CDF accuracy ...
+
+
+\section{Conclusion}
+
+We have shown how to use two subsequent machine learning models for mean and variance estimation together with a negative binomial model assumption to come up with individual PDF predictions. This setup is especially useful for retail demand forecasting, where the true demand follows a negative binomial distribution quite closely. Compared to a model-free approach like quantile regression, the distributional assumption therefore drastically reduces the uncertainty of the resulting predictions, which are, by using Cyclic Boosting as underlying machine learning algorithm, fully explainable on the individual level. 
+
+Furthermore, we have presented new qualitative and quantitative methods for evaluating predictions in form of full PDFs. For qualitative evaluation, it is important to check the full PDF, especially its tails that are often crucial for subsequent decision making, as well as investigate aggregations of individual PDFs (to reduce the uncertainty of the evaluation) dependent on specific variables, and we have proposed a novel profile approach called inverse quantile plot for this. For quantitative evaluation, it is always desirable to have a single number to compare different models in terms of accuracy, and we have suggested to use the deviance between the CDF histogram of the predicted PDFs and the uniform distribution to compare PDF accuracies.
 
 
 \bibliography{paper}
@@ -311,10 +361,10 @@ In many cases, scatter plots are used to study the behaviour of two distribution
 
 \begin{figure}
 \begin{center}
-\includegraphics[scale=0.5]{../figures/marginal} \includegraphics[scale=0.5]{../figures/scatter} 
+\includegraphics[scale=0.5]{../figures/marginal} \includegraphics[scale=0.5]{../figures/scatter}
 \caption{\label{fig:scatter} Marginal distribution and scatter plot of variables $X$ and $Y$.}
 \end{center}
-\end{figure} 
+\end{figure}
 
 Although the simple linear correlation between $X$ and $Y$ is apparent in the scatter plot, finer details are not visible and it is easy to imagine that a more complex relationship is difficult to discern. Profile histograms are specifically designed to address this shortcoming. Intuitively, profile histograms are a one-dimensional representation of the two-dimensional scatter plot and are obtained  in the following way: The variable on the $x$ axis is discretizised into a suitable range of bins. The exact choice of binning depends on the problem at hand. One can for example choose equidistant bins in the range of the $x$ axis or non-equidistant bins such that each bin contains the same number of observations. Then within each bin of the variable $X$, the a location and dispersion metric is calculated for the variable $Y$. This means that the bin-borders on the $X$ axis are used as constraints on the variable $Y$ and with these conditions applied, for example the sample mean of the selected $y$ values as well as the standard deviation are calculated. These location and dispersion metrics in each bin of $X$ are used to illustrate the behaviour of the variable $Y$ as the values of the variable $X$ change from bin to bin. The resulting profile histogram is shown in \fig \ref{fig:profile}. This one-dimensional representation allows to understand even a complex relationship between two variables visually. Note that due to few data points at the edges of the distributions the profile histogram is expected to show visual artifacts in the corresponding regions.
 
@@ -323,7 +373,7 @@ Although the simple linear correlation between $X$ and $Y$ is apparent in the sc
 \includegraphics[scale=0.5]{../figures/profile}
 \caption{\label{fig:profile} Profile histogram of variables $X$ and $Y$.}
 \end{center}
-\end{figure} 
+\end{figure}
 
 
 \end{document}
