@@ -238,7 +238,7 @@ We therefore proceed as follows: First, each individual predicted probability de
 \end{center}
 \end{figure}
 
-The two advantages of this method, as compared to the simpler method presented in section \ref{sec:cdf_histo}, are that an inverse quantile plot supports the qualitative evaluation of the predicted individual PDFs not only globally but (1) for different specified quantiles (potentially hinting to deviations in e.g. the tails of the distributions) and (2) in dependence of arbitrary variables of the data set (potentially hinting to deviations in e.g. specific categories of a feature). Two examples for this can be found in figures \ref{fig:invquant_mean} and \ref{fig:invquant_pg} in the next section.
+The two advantages of this method, as compared to the simpler method presented in section \ref{sec:cdf_histo}, are that an inverse quantile plot supports the qualitative evaluation of the predicted individual PDFs not only globally but (1) for different specified quantiles (potentially hinting to deviations in e.g. the tails of the distributions) and (2) in dependence of arbitrary variables of the data set (potentially hinting to deviations in e.g. specific categories of a feature). Two examples for this can be found in figures \ref{fig:invquant_mean} and \ref{fig:invquant_dayofweek} in the next section.
 
 \subsection{Quantitative Evaluation of PDF Predictions}
 
@@ -276,68 +276,50 @@ The EMD has the advantage over the mentioned divergences that it takes an underl
 
 \textcolor{red}{... predict an individual demand volume for different product-location-date combinations ...}
 
-\subsection{Mean Estimation}
+\subsection{Mean and Variance Estimations}
 
-...
+\textcolor{red}{...}
 
 \begin{figure}
 \begin{center}
-%\includegraphics[width=8cm]{../figures/cb_mean}
-\caption{\label{fig:cb_mean} 2 CB analysis plots for mean model}
+\includegraphics[width=8cm]{../figures/mean_prediction}
+\caption{\label{fig:mean_prediction} time series of mean prediction and actuals for one item in all stores}
 \end{center}
 \end{figure}
 
 \begin{figure}
 \begin{center}
-%\includegraphics[width=8cm]{../figures/mean_prediction}
-\caption{\label{fig:mean_prediction} time series of mean prediction and actuals for 2 product groups}
-\end{center}
-\end{figure}
-
-\subsection{Variance Estimation and PDF Predictions}
-
-...
-
-\begin{figure}
-\begin{center}
-%\includegraphics[width=8cm]{../figures/cb_var}
-\caption{\label{fig:cb_var} 2 CB analysis plots for variance model}
-\end{center}
-\end{figure}
-
-\begin{figure}
-\begin{center}
-%\includegraphics[width=8cm]{../figures/pdf_example}
-\caption{\label{fig:pdf_example} PDF example}
+\includegraphics[width=8cm]{../figures/cdf}
+\caption{\label{fig:cdf_example} CDF example}
 \end{center}
 \end{figure}
 
 \subsection{Evaluation of PDF Predictions}
 
-...
+\textcolor{red}{...}
 
 \begin{figure}
 \begin{center}
-%\includegraphics[width=8cm]{../figures/cdf_demand}
+\includegraphics[width=8cm]{../figures/cdf_truth}
 \caption{\label{fig:cdf_demand} CDF histogram}
 \end{center}
 \end{figure}
 
 \begin{figure}
 \begin{center}
-%\includegraphics[width=8cm]{../figures/invquant_mean}
+\includegraphics[width=8cm]{../figures/invquant_yhat_mean}
 \caption{\label{fig:invquant_mean} invquant profile for mean prediction on X-axis}
 \end{center}
 \end{figure}
 
 \begin{figure}
 \begin{center}
-%\includegraphics[width=8cm]{../figures/invquant_pg}
-\caption{\label{fig:invquant_pg} invquant profile for product groups on X-axis}
+\includegraphics[width=8cm]{../figures/invquant_dayofweek}
+\caption{\label{fig:invquant_dayofweek} invquant profile for day of week on X-axis}
 \end{center}
 \end{figure}
 
-... quantitative CDF accuracy ...
+\textcolor{red}{... quantitative CDF accuracy ...}
 
 
 \section{Conclusion}
