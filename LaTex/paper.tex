@@ -96,7 +96,7 @@ To predict an individual PDF by means of a parametric approach, one has to rely 
 
 This can be done using two independent models, one to estimate the mean and the other for the variance. At least in principle, any method can be used. However, as argued above, in the case of demand forecasting, each prediction is highly specific to the circumstances in which it is used (such as product ID, date, and store location) and may depend on  a multitude of describing variables (features). Machine learning algorithms are ideally suited for this task and in the following we will use the Cyclic Boosting algorithm.
 
-This means we use two subsequent, independent Cyclic Boosting models in order to estimate individual PDFs, the first to estimate the mean and the second to estimate the variance. The features may or may not differ between the mean and variance estimation models. But in any case, as there is a strong correlation between mean and variance, it is beneficial to include the corresponding predicted mean from the mean model as feature in the variance model. The assigned mean and variance predictions can then be used to generate individual PDFs according to a functional negative binomial distribution assumption for each sample. While any machine learning algorithm outputting a conditional mean as prediction may be used to get an approximate estimate for the mean of an underlying negative binomial distribution, it is preferable to choose an algorithm using a negative binomial assumption for its inner regularization methods, like Cyclic Boosting in multiplicative regression mode.
+This means we use two subsequent, independent Cyclic Boosting models in order to estimate individual PDFs, the first to estimate the mean and the second to estimate the variance. The features may or may not differ between the mean and variance estimation models, and one might even include the corresponding predicted mean from the mean model as feature in the variance model. The assigned mean and variance predictions can then be used to generate individual PDFs according to a functional negative binomial distribution assumption for each sample. While any machine learning algorithm outputting a conditional mean as prediction may be used to get an approximate estimate for the mean of an underlying negative binomial distribution, it is preferable to choose an algorithm using a negative binomial assumption for its inner regularization methods, like Cyclic Boosting in multiplicative regression mode.
 
 In the following, after a brief recap of the fundamental ideas of Cyclic Boosting, we describe a method to predict the variance of a negative binomial PDF along with its mean individually for each sample by means of Cyclic Boosting.
 
@@ -132,35 +132,35 @@ To be precise, the determination of $g^k_{j,t}$ for a specific feature $j$ emplo
 
 \subsection{Variance Estimation by Cyclic Boosting in Negative Binomial Width Mode}
 
-Cyclic Boosting in a modified form of its multiplicative regression mode (briefly described in sec. \ref{sec:CB}), namely the negative binomial width mode presented in the following, can be used for the second machine learning model to predict the negative binomial variance associated with the mean predicted by the first model.
+Cyclic Boosting in a modified form of the one briefly described in sec. \ref{sec:CB}, namely the negative binomial width mode presented in the following, can be used for the second machine learning model to predict the negative binomial variance associated with the mean predicted by the first model.
 
-For regression, the parametrization of the negative binomial mass function can be specified as \cite{hilbe2011negative}:
+For regression of a target variable $y$ taking the values $y = 0, 1, 2, ...$, the parametrization of the negative binomial mass function by means of mean $\mu$ and dispersion parameter $r$ can be specified as \cite{hilbe2011negative}:
 
 \begin{equation} \label{eqn:nbinom}
 \mathrm{NB}(y; \mu, r) = \frac{\Gamma(r + y)}{y! \cdot \Gamma(r)} \cdot \left(\frac{r}{r + \mu}\right)^r \cdot \left(\frac{\mu}{r + \mu}\right)^y,
 \end{equation}
 
-with mean $\mu$ and dispersion parameter $r$. The target variable $y$ takes the values $y = 0, 1, 2, ...$.
-
-The variance estimation is achieved by minimizing the loss function defined in \eqn \eqref{eqn:loss_likelihood}, expressed as negative log-likelihood function of a negative binomial distribution, with respect to the Cyclic Boosting parameters $f^k_j$, constituting the model of $r_i$ according to  \eqn \eqref{eqn:r}, over all input samples $i$, where the mean values $\hat{\mu_i}$ are fixed to the corresponding predictions from the first machine learning model outputting the conditional mean.
-
-\begin{equation} \label{eqn:loss_likelihood}
-L(r) = -\mathcal{L}(r) = -\ln \sum_i \mathrm{NB}(y_i; \hat{\mu_i}, r_i)
-\end{equation}
-
-As stated in \eqn \eqref{eqn:r}, the values $r_i$ are defined by the Cyclic Boosting model parameters $f^k_j$ for each feature $j$ and bin $k$. For any concrete observation $i$, the index $k$ of the bin is determined by the observation of $x_{j,i}$ and the subsequent look-up into which bin this observation falls. The dispersion parameter $r$ is bound to the interval $[1, \infty]$.
-
-\begin{equation} \label{eqn:r}
-r_i = 1 + \prod \limits_{j=1}^p f^k_j \quad \text{with}\; k=\{ x_{j,i} \in b^k_j\}
-\end{equation}
-
-As described in \cite{Wick2019}, the parameter estimation in Cyclic Boosting is an iterative method corresponding to a cyclic coordinate descent, processing one feature with all its bins at a time until convergence. Unlike in the original multiplicative regression mode of Cyclic Boosting, the minimization of the loss function in \eqn \eqref{eqn:loss_likelihood} cannot be solved analytically and requires a numerical method, for example a random search. All other advantages of Cyclic Boosting, like for example individual explainability of predictions, remain valid for its negative binomial width mode.
-
-Finally, the variance $\hat{\sigma}^2_i$ can be calculated from the dispersion parameter $\hat{r_i}$ by means of \eqn \eqref{eqn:variance_r}. And so, together with the estimated mean parameter $\hat{\mu_i}$ from the previous mean estimation model, all parameters of the negative binomial distribution NB for the prediction of an individual observation $i$ are given.
+Bounding the inverse of the dispersion parameter $1/r$ to the interval $[0, 1]$ (corresponding to bounding $r$ to the interval $[1, \infty]$), the variance $\sigma^2$ can be calculated from $\mu$ and $r$ via:
 
 \begin{equation} \label{eqn:variance_r}
 \sigma^2 = \mu + \frac{\mu^2}{r}
 \end{equation}
+
+An estimation of the dispersion parameter $\hat{r}$ can be achieved by minimizing the loss function defined in \eqn \eqref{eqn:loss_likelihood}, expressed as negative log-likelihood function of a negative binomial distribution, with respect to the Cyclic Boosting parameters $f^k_j$ constituting the model of $\hat{r_i}$ according to \eqn \eqref{eqn:r}, over all input samples $i$, where the mean values $\hat{\mu_i}$ are fixed to the corresponding predictions from the first machine learning model outputting the conditional mean.
+
+\begin{equation} \label{eqn:loss_likelihood}
+L(r) = -\mathcal{L}(r) = -\ln \sum_i \mathrm{NB}(y_i; \hat{\mu_i}, \hat{r_i})
+\end{equation}
+
+\begin{equation} \label{eqn:r}
+\hat{r_i} = 1 + \prod \limits_{j=1}^p f^k_j \quad \text{with}\; k=\{ x_{j,i} \in b^k_j\}
+\end{equation}
+
+So, the values $\hat{r_i}$ are estimated by means of the Cyclic Boosting model parameters $f^k_j$ for each feature $j$ and bin $k$. For any concrete observation $i$, the index $k$ of the bin is determined by the observation of $x_{j,i}$ and the subsequent look-up into which bin this observation falls. Just like in sec. \ref{sec:CB}, the model parameters $f^k_j$ correspond to factors with values in $[0, \infty]$ and neutral factor $1$. Analog to the classification mode of Cyclic Boosting described in \cite{Wick2019}, the structure of \eqn \eqref{eqn:r} can be interpreted as inverse of a logit link function.
+
+As described in \cite{Wick2019}, the parameter estimation in Cyclic Boosting is an iterative method corresponding to a cyclic coordinate descent, processing one feature with all its bins at a time until convergence. Unlike in the basic multiplicative regression mode of Cyclic Boosting described in sec. \ref{sec:CB}, the minimization of the loss function in \eqn \eqref{eqn:loss_likelihood} cannot be solved analytically and requires a numerical method, for example a random search. All other advantages of Cyclic Boosting, like for example individual explainability of predictions, remain valid for its negative binomial width mode.
+
+Finally, the variance $\hat{\sigma}^2_i$ can be estimated from the dispersion parameter $\hat{r_i}$ by means of \eqn \eqref{eqn:variance_r}. And so, together with the estimated mean parameter $\hat{\mu_i}$ from the previous mean estimation model, all parameters of the negative binomial distribution NB for the prediction of an individual observation $i$ are given.
 
 
 \section{Evaluation of PDF Predictions}
@@ -289,8 +289,9 @@ The EMD has the advantage over the mentioned divergences that it takes an underl
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{../figures/cdf}
-\caption{\label{fig:cdf_example} CDF example}
+\includegraphics[width=4cm]{../figures/pdf}
+\includegraphics[width=4cm]{../figures/cdf}
+\caption{\label{fig:pdf_example} PDF/CDF example}
 \end{center}
 \end{figure}
 
@@ -308,14 +309,14 @@ The EMD has the advantage over the mentioned divergences that it takes an underl
 \begin{figure}
 \begin{center}
 \includegraphics[width=8cm]{../figures/invquant_yhat_mean}
-\caption{\label{fig:invquant_mean} invquant profile for mean prediction on X-axis}
+\caption{\label{fig:invquant_mean} invquant profile for mean predictions of all product-location-day combinations on X-axis}
 \end{center}
 \end{figure}
 
 \begin{figure}
 \begin{center}
 \includegraphics[width=8cm]{../figures/invquant_dayofweek}
-\caption{\label{fig:invquant_dayofweek} invquant profile for day of week on X-axis}
+\caption{\label{fig:invquant_dayofweek} invquant profile for day of week of one product over all locations and days on X-axis}
 \end{center}
 \end{figure}
 
