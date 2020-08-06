@@ -433,8 +433,8 @@ def cb_width_model():
     fp['correction_factor'] = flags.IS_CONTINUOUS | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
 
     features = [
-        'yhat_mean_feature',
-        'correction_factor',
+#        'yhat_mean_feature',
+#        'correction_factor',
 #        'dayofweek',
         'store_id',
         'item_id',
@@ -515,9 +515,17 @@ def main(args):
     plot_cdf(X['n'][359323], X['p'][359323])
 
     X['cdf_truth'] = nbinom.cdf(X['y'], X['n'], X['p'])
-    cdf_accuracy(X['cdf_truth'][mask], 'wasserstein_2')
     X['cdf_truth_poisson'] = poisson.cdf(X['y'], X['yhat_mean'])
+    cdf_accuracy(X['cdf_truth'][mask], 'wasserstein_2')
     cdf_accuracy(X['cdf_truth_poisson'][mask], 'wasserstein_2')
+    cdf_accuracy(X['cdf_truth'][mask], 'kullback_2')
+    cdf_accuracy(X['cdf_truth_poisson'][mask], 'kullback_2')
+    cdf_accuracy(X['cdf_truth'][mask], 'kullback_e')
+    cdf_accuracy(X['cdf_truth_poisson'][mask], 'kullback_e')
+    cdf_accuracy(X['cdf_truth'][mask], 'jensen_2')
+    cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_2')
+    cdf_accuracy(X['cdf_truth'][mask], 'jensen_e')
+    cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_e')
 
 #    plot_cdf_truth(X['cdf_truth'][mask])
 #    plot_cdf_truth(X['cdf_truth_poisson'][mask])
