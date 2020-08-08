@@ -290,7 +290,7 @@ Just to give a rough verification for the accuracy of the mean predictions, we r
 
 The second model, also based on Cyclic Boosting, is used to estimate the variance of the negative binomial distribution. The data are split into training and test set as above and in addition the mean predictions for each individual product-location-date combination are fixed in the variance model as stated by \eqn \eqref{eqn:loss_likelihood}. This effectively means that the mean predictions are created in-sample for the training period using the fully trained and validated model for the mean discussed above.
 
-In this model focusing on the variance, we use a different set of features: categorical variables for \texttt{store\_id} and \texttt{item\_id} and a flag denoting a promotion. An example for the resulting PDF and CDF predictions for item \texttt{FOODS\_3\_586} in store \texttt{WI\_1} on 2016-05-22 is shown in \fig \ref{fig:pdf_example}.
+In this model focusing on the variance, we use the same set of features as for the mean model described above in sec. \ref{sec:example_mean}, except for dropping the two-dimensional combinations including individual event features. An example for the resulting PDF and CDF predictions for item \texttt{FOODS\_3\_586} in store \texttt{WI\_1} on 2016-05-22 is shown in \fig \ref{fig:pdf_example}.
 
 \begin{figure}
 \begin{center}
