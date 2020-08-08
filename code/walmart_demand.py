@@ -73,14 +73,14 @@ def plot_cdf(n, p):
     plt.savefig('plots/cdf.pdf')
 
 
-def plot_cdf_truth(cdf_truth):
+def plot_cdf_truth(cdf_truth, suffix):
     plt.figure()
-    plt.hist(cdf_truth, bins=20)
+    plt.hist(cdf_truth, bins=30)
     plt.tight_layout()
-    plt.savefig('plots/cdf_truth.pdf')
+    plt.savefig('plots/cdf_truth_' + suffix + '.pdf')
 
 
-def plot_invquants(X, variable):
+def plot_invquants(X, variable, suffix):
     means_result = binned_statistic(X[variable], [X['cdf_truth']<=0.1, X['cdf_truth']<=0.3, X['cdf_truth']<=0.5, X['cdf_truth']<=0.7, X['cdf_truth']<=0.9, X['cdf_truth']<=0.97], bins=20, statistic='mean')
     means10, means30, means50, means70, means90, means97 = means_result.statistic
 
@@ -96,7 +96,7 @@ def plot_invquants(X, variable):
     plt.errorbar(x=bin_centers, y=means97, linestyle='none', marker='s')
     plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], bin_edges[0], bin_edges[-1])
     plt.tight_layout()
-    plt.savefig('plots/invquant_' + variable + '.pdf')
+    plt.savefig('plots/invquant_' + variable + '_' + suffix + '.pdf')
 
 
 def plot_timeseries(df, suffix, title=''):
@@ -125,12 +125,6 @@ def plotting(df, suffix=''):
     for name, group in predictions_grouped:
         ts_data = group.groupby(['date'])['y', 'yhat_mean'].sum().reset_index()
         plot_timeseries(ts_data, 'item_' + str(name) + suffix)
-
-
-def transform_nbinom(mean, var):
-    p = np.minimum(np.where(var > 0, mean / var, 1 - 1e-8), 1 - 1e-8)
-    n = np.where(var > 0, mean * p / (1 - p), 1)
-    return n, p
 
 
 def eval_results(yhat_mean, y):
@@ -309,7 +303,7 @@ def feature_properties():
     fp['dayofyear'] = flags.IS_CONTINUOUS | flags.IS_LINEAR
     fp['weekofmonth'] = flags.IS_ORDERED
     fp['td'] = flags.IS_CONTINUOUS | flags.IS_LINEAR
-    fp['list_price'] = flags.IS_CONTINUOUS | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
+    fp['price_ratio'] = flags.IS_CONTINUOUS | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp['snap'] = flags.IS_UNORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp['event_type_1'] = flags.IS_UNORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp['promo'] = flags.IS_ORDERED
@@ -338,17 +332,17 @@ def feature_properties():
 
 def cb_mean_model():
     fp = feature_properties()
-    explicit_smoothers = {('dayofyear',): SeasonalSmoother(order=2),
-                          ('list_price',): IsotonicRegressor(increasing=False),
+    explicit_smoothers = {('dayofyear',): SeasonalSmoother(order=3),
+                          ('price_ratio',): IsotonicRegressor(increasing=False),
                          }
 
     features = [
         'td',
         'dayofweek',
         'store_id',
-        'list_price',
         'item_id',
         'promo',
+        'price_ratio',
         'dayofyear',
         'month',
         'snap',
@@ -376,11 +370,13 @@ def cb_mean_model():
         "Cinco De Mayo",
         ('item_id', 'store_id'),
         ('item_id', 'promo'),
+        ('item_id', 'price_ratio'),
         ('store_id', 'dayofweek'),
         ('item_id', 'dayofweek'),
         ('snap', 'dayofweek'),
         ('snap', 'item_id'),
         ('store_id', 'weekofmonth'),
+        ('item_id', 'event_type_1'),
         ('item_id', 'Christmas'),
         ('item_id', 'Easter'),
         ('item_id', 'NewYear'),
@@ -403,23 +399,19 @@ def cb_mean_model():
         ('item_id', "Cinco De Mayo"),
     ]
 
-    price_features = ['list_price', 'store_id']
-
     plobs = [cyclic_boosting.observers.PlottingObserver(iteration=-1)]
 
-    est = CBExponential(
-              feature_properties=fp,
-              standard_feature_groups=features,
-              external_feature_groups=price_features,
-              external_colname='price_ratio',
-              weight_column='weights_cb',
-              observers=plobs,
-              maximal_iterations=50,
-              smoother_choice=cyclic_boosting.common_smoothers.SmootherChoiceGroupBy(
-                  use_regression_type=True,
-                  use_normalization=False,
-                  explicit_smoothers=explicit_smoothers),
-          )
+    est = CBFixedVarianceRegressor(
+        feature_properties=fp,
+        feature_groups=features,
+        observers=plobs,
+        weight_column='weights_cb',
+        maximal_iterations=50,
+        smoother_choice=cyclic_boosting.common_smoothers.SmootherChoiceGroupBy(
+            use_regression_type=True,
+            use_normalization=False,
+            explicit_smoothers=explicit_smoothers),
+    )
 
     binner = binning.BinNumberTransformer(n_bins=100, feature_properties=fp)
 
@@ -430,16 +422,53 @@ def cb_mean_model():
 def cb_width_model():
     fp = feature_properties()
     fp['yhat_mean_feature'] = flags.IS_CONTINUOUS | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
-    fp['correction_factor'] = flags.IS_CONTINUOUS | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
+
+    explicit_smoothers = {('dayofyear',): SeasonalSmoother(order=3),
+                          ('price_ratio',): IsotonicRegressor(increasing=False),
+                         }
 
     features = [
 #        'yhat_mean_feature',
-#        'correction_factor',
-#        'dayofweek',
+        'td',
+        'dayofweek',
         'store_id',
         'item_id',
         'promo',
-#        ('yhat_mean_feature', 'correction_factor')
+        'price_ratio',
+        'dayofyear',
+        'month',
+        'snap',
+        'Christmas',
+        'Easter',
+        'event_type_1',
+        'weekofmonth',
+        'NewYear',
+        'OrthodoxChristmas',
+        'MartinLutherKingDay',
+        'SuperBowl',
+        'ValentinesDay',
+        'PresidentsDay',
+        'StPatricksDay',
+        'OrthodoxEaster',
+        "Mother's day",
+        'MemorialDay',
+        "Father's day",
+        'IndependenceDay',
+        'LaborDay',
+        'ColumbusDay',
+        'Halloween',
+        'VeteransDay',
+        'Thanksgiving',
+        "Cinco De Mayo",
+        ('item_id', 'store_id'),
+        ('item_id', 'promo'),
+        ('item_id', 'price_ratio'),
+        ('store_id', 'dayofweek'),
+        ('item_id', 'dayofweek'),
+        ('snap', 'dayofweek'),
+        ('snap', 'item_id'),
+        ('store_id', 'weekofmonth'),
+        ('item_id', 'event_type_1'),
     ]
 
     plobs = [cyclic_boosting.observers.PlottingObserver(iteration=-1)]
@@ -450,10 +479,13 @@ def cb_width_model():
         feature_groups=features,
         observers=plobs,
         maximal_iterations=50,
-        smoother_choice=cyclic_boosting.common_smoothers.SmootherChoiceSVD()
+        smoother_choice=cyclic_boosting.common_smoothers.SmootherChoiceGroupBy(
+            use_regression_type=True,
+            use_normalization=False,
+            explicit_smoothers=explicit_smoothers),
     )
 
-    binner = binning.BinNumberTransformer(n_bins=200, feature_properties=fp)
+    binner = binning.BinNumberTransformer(n_bins=100, feature_properties=fp)
 
     ml_est = pipeline.Pipeline([("binning", binner), ("CB", est)])
     return ml_est
@@ -462,18 +494,72 @@ def cb_width_model():
 def emov_correction(X, group_cols, date_col, horizon=None):
     X.sort_values([date_col], inplace=True)
     X_grouped = X.groupby(group_cols)
+    alpha = 0.15
 
     if horizon is None:
-        truth_emov = X_grouped['y'].apply(lambda x: x.ewm(com=2.0, ignore_na=True).mean())
-        pred_emov = X_grouped['yhat_mean'].apply(lambda x: x.ewm(com=2.0, ignore_na=True).mean())
+        truth_emov = X_grouped['y'].apply(lambda x: x.ewm(alpha=alpha, ignore_na=True).mean())
+        pred_emov = X_grouped['yhat_mean'].apply(lambda x: x.ewm(alpha=alpha, ignore_na=True).mean())
         X['correction_factor'] = truth_emov / pred_emov
         X = X[X[date_col] == X[date_col].max()]
         return X[group_cols + ['correction_factor']]
     else:
-        truth_emov = X_grouped['y'].apply(lambda x: x.shift(horizon).ewm(com=2.0, ignore_na=True).mean())
-        pred_emov = X_grouped['yhat_mean'].apply(lambda x: x.shift(horizon).ewm(com=2.0, ignore_na=True).mean())
+        truth_emov = X_grouped['y'].apply(lambda x: x.shift(horizon).ewm(alpha=alpha, ignore_na=True).mean())
+        pred_emov = X_grouped['yhat_mean'].apply(lambda x: x.shift(horizon).ewm(alpha=alpha, ignore_na=True).mean())
         X['correction_factor'] = truth_emov / pred_emov
         return X
+
+
+def mean_fit(X, y, split_date):
+    ml_est_mean = cb_mean_model()
+    ml_est_mean.fit(X[X['date'] < split_date].copy(), y[X['date'] < split_date])
+    plot_CB('analysis_CB_mean_iterlast', [ml_est_mean.ests[-1][1].observers[-1]], ml_est_mean.ests[-2][1])
+    return ml_est_mean
+
+
+def mean_predict(X, ml_est_mean):
+    yhat_mean = ml_est_mean.predict(X.copy())
+#    plot_factors(ml_est_mean, X, [359323])
+    return yhat_mean
+
+
+def width_fit(X, split_date):
+    ml_est_width = cb_width_model()
+    mask = X['date'] >= split_date
+    ml_est_width.fit(X[mask].copy(), np.asarray(X['y'])[mask])
+    plot_CB('analysis_CB_width_iterlast', [ml_est_width.ests[-1][1].observers[-1]], ml_est_width.ests[-2][1])
+    return ml_est_width
+
+
+def width_predict(X, ml_est_width):
+    c = ml_est_width.predict(X.copy())
+#    c[X['yhat_mean'] < 1.] = 1
+    return X['yhat_mean'] + c * X['yhat_mean'] * X['yhat_mean']
+
+
+def transform_nbinom(mean, var):
+    p = np.minimum(np.where(var > 0, mean / var, 1 - 1e-8), 1 - 1e-8)
+    n = np.where(var > 0, mean * p / (1 - p), 1)
+    return n, p
+
+
+def random_from_cdf_interval(X, mode='nbinom'):
+    if mode == 'nbinom':
+        cdf_high = nbinom.cdf(X['y'], X['n'], X['p'])
+        cdf_low = nbinom.cdf(np.where(X['y'] >= 1., X['y'] - 1., 0.), X['n'], X['p'])
+    elif mode == 'poisson':
+        cdf_high = poisson.cdf(X['y'], X['yhat_mean'])
+        cdf_low = poisson.cdf(np.where(X['y'] >= 1., X['y'] - 1., 0.), X['yhat_mean'])
+    cdf_low = np.where(X['y'] == 0., 0., cdf_low)
+    return cdf_low + np.random.uniform(0, 1, len(cdf_high)) * (cdf_high - cdf_low)
+
+
+def cdf_truth(X):
+    X['n'], X['p'] = transform_nbinom(X['yhat_mean'], X['yhat_var'])
+    plot_pdf(X['n'][359323], X['p'][359323])
+    plot_cdf(X['n'][359323], X['p'][359323])
+    X['cdf_truth'] = random_from_cdf_interval(X, mode='nbinom')
+    X['cdf_truth_poisson'] = random_from_cdf_interval(X, mode='poisson')
+    return X
 
 
 def main(args):
@@ -483,15 +569,16 @@ def main(args):
 
     split_date = '2016-01-01'
 
-    ml_est_mean = cb_mean_model()
-    ml_est_mean.fit(X[X['date'] < split_date].copy(), y[X['date'] < split_date])
-    plot_CB('analysis_CB_mean_iterlast', [ml_est_mean.ests[-1][1].observers[-1]], ml_est_mean.ests[-2][1])
+    X_mean_fit = X.copy()
+    ml_est_mean = mean_fit(X_mean_fit, y, split_date)
+    del X_mean_fit
 
-    X['yhat_mean'] = ml_est_mean.predict(X.copy())
-    plot_factors(ml_est_mean, X, [359323])
+    X_mean_pred = X.copy()
+    X['yhat_mean'] = mean_predict(X_mean_pred, ml_est_mean)
+    del X_mean_pred
 
     X['y'] = y
-    horizon = 1
+    horizon = 2
     if horizon is None:
         df_correction = emov_correction(X[X['date'] < split_date], ['store_id', 'item_id'], 'date')
         df_correction.reset_index(drop=True, inplace=True)
@@ -501,21 +588,19 @@ def main(args):
     mask = (X['date'] >= split_date) & (pd.notna(X['correction_factor']))
     X['yhat_mean'][mask] = X['correction_factor'][mask] * X['yhat_mean'][mask]
 
-    X['yhat_mean_feature'] = X['yhat_mean']
+#    X['yhat_mean_feature'] = X['yhat_mean']
 
-    ml_est_width = cb_width_model()
+    X_width_fit = X.copy()
+    ml_est_width = width_fit(X_width_fit, split_date)
+    del X_width_fit
+
+    X_width_predict = X.copy()
+    X['yhat_var'] = width_predict(X_width_predict, ml_est_width)
+    del X_width_predict
+
+    X = cdf_truth(X)
+
     mask = X['date'] >= split_date
-    ml_est_width.fit(X[mask].copy(), np.asarray(X['y'])[mask])
-    plot_CB('analysis_CB_width_iterlast', [ml_est_width.ests[-1][1].observers[-1]], ml_est_width.ests[-2][1])
-
-    c = ml_est_width.predict(X.copy())
-    X['yhat_var'] = X['yhat_mean'] + c * X['yhat_mean'] * X['yhat_mean']
-    X['n'], X['p'] = transform_nbinom(X['yhat_mean'], X['yhat_var'])
-    plot_pdf(X['n'][359323], X['p'][359323])
-    plot_cdf(X['n'][359323], X['p'][359323])
-
-    X['cdf_truth'] = nbinom.cdf(X['y'], X['n'], X['p'])
-    X['cdf_truth_poisson'] = poisson.cdf(X['y'], X['yhat_mean'])
     cdf_accuracy(X['cdf_truth'][mask], 'wasserstein_2')
     cdf_accuracy(X['cdf_truth_poisson'][mask], 'wasserstein_2')
     cdf_accuracy(X['cdf_truth'][mask], 'kullback_2')
@@ -527,15 +612,17 @@ def main(args):
     cdf_accuracy(X['cdf_truth'][mask], 'jensen_e')
     cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_e')
 
-#    plot_cdf_truth(X['cdf_truth'][mask])
-#    plot_cdf_truth(X['cdf_truth_poisson'][mask])
-    plot_cdf_truth(X['cdf_truth'][mask & (X['item_id'] == 86)])
-#    plot_cdf_truth(X['cdf_truth_poisson'][mask & (X['item_id'] == 86)])
+    plot_cdf_truth(X['cdf_truth'][mask], 'nbinom')
+    plot_cdf_truth(X['cdf_truth_poisson'][mask], 'poisson')
+    plot_cdf_truth(X['cdf_truth'][mask & (X['yhat_mean'] >= 1.)], 'nbinom_larger1')
+    plot_cdf_truth(X['cdf_truth_poisson'][mask & (X['yhat_mean'] >= 1.)], 'poisson_larger1')
 
-    plot_invquants(X[mask], 'yhat_mean')
-    plot_invquants(X[mask], 'item_id')
-    plot_invquants(X[mask & (X['item_id'] == 86)], 'store_id')
-    plot_invquants(X[mask & (X['item_id'] == 86)], 'dayofweek')
+    plot_invquants(X[mask], 'yhat_mean', 'nbinom')
+    plot_invquants(X[mask], 'store_id', 'nbinom')
+    plot_invquants(X[mask], 'dayofweek', 'nbinom')
+    plot_invquants(X[mask], 'yhat_mean', 'poisson')
+    plot_invquants(X[mask], 'store_id', 'poisson')
+    plot_invquants(X[mask], 'dayofweek', 'poisson')
 
     X['yhat_mean'] = np.round(X['yhat_mean'], 2)
     X['yhat_var'] = np.round(X['yhat_var'], 2)
