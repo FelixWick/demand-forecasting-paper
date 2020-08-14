@@ -61,6 +61,7 @@ def plot_pdf(n, p):
     plt.figure()
     x = range(30)
     plt.plot(x, nbinom.pmf(x, n, p))
+    plt.xlabel("sales")
     plt.tight_layout()
     plt.savefig('plots/pdf.pdf')
 
@@ -69,6 +70,7 @@ def plot_cdf(n, p):
     plt.figure()
     x = np.linspace(0.0, 30.0, num=100)
     plt.plot(x, nbinom.cdf(x, n, p))
+    plt.xlabel("sales")
     plt.tight_layout()
     plt.savefig('plots/cdf.pdf')
 
@@ -76,25 +78,48 @@ def plot_cdf(n, p):
 def plot_cdf_truth(cdf_truth, suffix):
     plt.figure()
     plt.hist(cdf_truth, bins=30)
+    plt.xlabel("CDF values")
+    plt.ylabel("count")
     plt.tight_layout()
     plt.savefig('plots/cdf_truth_' + suffix + '.pdf')
 
 
-def plot_invquants(X, variable, suffix):
-    means_result = binned_statistic(X[variable], [X['cdf_truth']<=0.1, X['cdf_truth']<=0.3, X['cdf_truth']<=0.5, X['cdf_truth']<=0.7, X['cdf_truth']<=0.9, X['cdf_truth']<=0.97], bins=20, statistic='mean')
+def plot_invquants(X, variable, suffix, continuous=False):
+    cols = [X['cdf_truth']<=0.1, X['cdf_truth']<=0.3, X['cdf_truth']<=0.5, X['cdf_truth']<=0.7, X['cdf_truth']<=0.9, X['cdf_truth']<=0.97]
+    if continuous:
+        bins = [0., 5., 10., 15. ,20., 30., 40., 50., 60., 80., 100.]
+    else:
+        bins = 100
+    means_result = binned_statistic(X[variable], cols, bins=bins, statistic='mean')
+    std_result = binned_statistic(X[variable], cols, bins=bins, statistic='std')
     means10, means30, means50, means70, means90, means97 = means_result.statistic
+    std10, std30, std50, std70, std90, std97 = std_result.statistic
+    std10 = std10 / np.sqrt(len(X))
+    std30 = std30 / np.sqrt(len(X))
+    std50 = std50 / np.sqrt(len(X))
+    std70 = std70 / np.sqrt(len(X))
+    std90 = std90 / np.sqrt(len(X))
+    std97 = std97 / np.sqrt(len(X))
 
     bin_edges = means_result.bin_edges
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
 
     plt.figure()
-    plt.errorbar(x=bin_centers, y=means10, linestyle='none', marker='v')
-    plt.errorbar(x=bin_centers, y=means30, linestyle='none', marker='<')
-    plt.errorbar(x=bin_centers, y=means50, linestyle='none', marker='.')
-    plt.errorbar(x=bin_centers, y=means70, linestyle='none', marker='>')
-    plt.errorbar(x=bin_centers, y=means90, linestyle='none', marker='^')
-    plt.errorbar(x=bin_centers, y=means97, linestyle='none', marker='s')
+    plt.errorbar(x=bin_centers, y=means10, yerr=std10, linestyle='none', marker='v')
+    plt.errorbar(x=bin_centers, y=means30, yerr=std30, linestyle='none', marker='<')
+    plt.errorbar(x=bin_centers, y=means50, yerr=std50, linestyle='none', marker='.')
+    plt.errorbar(x=bin_centers, y=means70, yerr=std70, linestyle='none', marker='>')
+    plt.errorbar(x=bin_centers, y=means90, yerr=std90, linestyle='none', marker='^')
+    plt.errorbar(x=bin_centers, y=means97, yerr=std97, linestyle='none', marker='s')
+    # plt.errorbar(x=bin_centers, y=means10, linestyle='none', marker='v')
+    # plt.errorbar(x=bin_centers, y=means30, linestyle='none', marker='<')
+    # plt.errorbar(x=bin_centers, y=means50, linestyle='none', marker='.')
+    # plt.errorbar(x=bin_centers, y=means70, linestyle='none', marker='>')
+    # plt.errorbar(x=bin_centers, y=means90, linestyle='none', marker='^')
+    # plt.errorbar(x=bin_centers, y=means97, linestyle='none', marker='s')
     plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], bin_edges[0], bin_edges[-1])
+    plt.xlabel(variable)
+    plt.ylabel("quantile")
     plt.tight_layout()
     plt.savefig('plots/invquant_' + variable + '_' + suffix + '.pdf')
 
@@ -105,7 +130,8 @@ def plot_timeseries(df, suffix, title=''):
     df['y'].plot(style='r', label="sales")
     df['yhat_mean'].plot(style='b', label="prediction")
     plt.legend()
-    plt.title(title)
+#    plt.title(title)
+    plt.ylabel("sum")
     plt.tight_layout()
     plt.savefig('plots/ts_{}.png'.format(suffix))
 
@@ -598,6 +624,7 @@ def main(args):
     X['yhat_var'] = width_predict(X_width_predict, ml_est_width)
     del X_width_predict
 
+    np.random.seed(42)
     X = cdf_truth(X)
 
     mask = X['date'] >= split_date
@@ -617,10 +644,10 @@ def main(args):
     plot_cdf_truth(X['cdf_truth'][mask & (X['yhat_mean'] >= 1.)], 'nbinom_larger1')
     plot_cdf_truth(X['cdf_truth_poisson'][mask & (X['yhat_mean'] >= 1.)], 'poisson_larger1')
 
-    plot_invquants(X[mask], 'yhat_mean', 'nbinom')
+    plot_invquants(X[mask], 'yhat_mean', 'nbinom', continuous=True)
     plot_invquants(X[mask], 'store_id', 'nbinom')
     plot_invquants(X[mask], 'dayofweek', 'nbinom')
-    plot_invquants(X[mask], 'yhat_mean', 'poisson')
+    plot_invquants(X[mask], 'yhat_mean', 'poisson', continuous=True)
     plot_invquants(X[mask], 'store_id', 'poisson')
     plot_invquants(X[mask], 'dayofweek', 'poisson')
 
