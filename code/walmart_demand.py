@@ -92,25 +92,27 @@ def plot_invquants(X, variable, suffix, continuous=False):
         bins = 100
     means_result = binned_statistic(X[variable], cols, bins=bins, statistic='mean')
     std_result = binned_statistic(X[variable], cols, bins=bins, statistic='std')
+    count_result = binned_statistic(X[variable], cols, bins=bins, statistic='count')
     means10, means30, means50, means70, means90, means97 = means_result.statistic
     std10, std30, std50, std70, std90, std97 = std_result.statistic
-    std10 = std10 / np.sqrt(len(X))
-    std30 = std30 / np.sqrt(len(X))
-    std50 = std50 / np.sqrt(len(X))
-    std70 = std70 / np.sqrt(len(X))
-    std90 = std90 / np.sqrt(len(X))
-    std97 = std97 / np.sqrt(len(X))
+    count10, count30, count50, count70, count90, count97 = count_result.statistic
+    stdmean10 = std10 / np.sqrt(count10)
+    stdmean30 = std30 / np.sqrt(count30)
+    stdmean50 = std50 / np.sqrt(count50)
+    stdmean70 = std70 / np.sqrt(count70)
+    stdmean90 = std90 / np.sqrt(count90)
+    stdmean97 = std97 / np.sqrt(count97)
 
     bin_edges = means_result.bin_edges
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
 
     plt.figure()
-    plt.errorbar(x=bin_centers, y=means10, yerr=std10, linestyle='none', marker='v')
-    plt.errorbar(x=bin_centers, y=means30, yerr=std30, linestyle='none', marker='<')
-    plt.errorbar(x=bin_centers, y=means50, yerr=std50, linestyle='none', marker='.')
-    plt.errorbar(x=bin_centers, y=means70, yerr=std70, linestyle='none', marker='>')
-    plt.errorbar(x=bin_centers, y=means90, yerr=std90, linestyle='none', marker='^')
-    plt.errorbar(x=bin_centers, y=means97, yerr=std97, linestyle='none', marker='s')
+    plt.errorbar(x=bin_centers, y=means10, yerr=stdmean10, linestyle='none', marker='v')
+    plt.errorbar(x=bin_centers, y=means30, yerr=stdmean30, linestyle='none', marker='<')
+    plt.errorbar(x=bin_centers, y=means50, yerr=stdmean50, linestyle='none', marker='.')
+    plt.errorbar(x=bin_centers, y=means70, yerr=stdmean70, linestyle='none', marker='>')
+    plt.errorbar(x=bin_centers, y=means90, yerr=stdmean90, linestyle='none', marker='^')
+    plt.errorbar(x=bin_centers, y=means97, yerr=stdmean97, linestyle='none', marker='s')
     # plt.errorbar(x=bin_centers, y=means10, linestyle='none', marker='v')
     # plt.errorbar(x=bin_centers, y=means30, linestyle='none', marker='<')
     # plt.errorbar(x=bin_centers, y=means50, linestyle='none', marker='.')
