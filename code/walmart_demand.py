@@ -34,7 +34,7 @@ def plot_CB(filename, plobs, binner):
         )
 
 
-def plot_factors(est, X, samples):
+def calculate_factors(est, X):
     factors = {}
     for feature in est.ests[-1][1].features:
         ft = "" if feature.feature_type is None else "_{}".format(
@@ -42,19 +42,95 @@ def plot_factors(est, X, samples):
 
         factors[
             "_".join(feature.feature_group) + ft
-            ] = np.exp(est.ests[-1][1]._pred_feature(X, feature, is_fit=False)) - 1.
+            ] = np.exp(est.ests[-1][1]._pred_feature(X, feature, is_fit=False))
+    factors['date'] = X['date']
+    factors['yhat_mean'] = X['yhat_mean']
+    factors['y'] = X['y']
     df_factors = pd.DataFrame(factors)
 
-    ax = df_factors.loc[samples].plot(kind='barh', title="factors", legend=True, fontsize=15)
-    fig = ax.get_figure()
-    ax.axvline(0, color="gray")
-    ax.set_yticks([])
+    df_factors['item_store'] = df_factors['item_id'] * df_factors['store_id'] * df_factors['item_id_store_id']
+    df_factors['price'] = df_factors['promo'] * df_factors['price_ratio'] * df_factors['item_id_promo'] * df_factors['item_id_price_ratio']
+    df_factors['dayofweek'] = df_factors['dayofweek'] * df_factors['store_id_dayofweek'] * df_factors['item_id_dayofweek']
+    df_factors['weekofmonth'] = df_factors['weekofmonth'] * df_factors['store_id_weekofmonth']
+    df_factors['snap'] = df_factors['snap'] * df_factors['snap_dayofweek'] * df_factors['snap_item_id']
+    df_factors['seasonality'] = df_factors['td'] * df_factors['dayofyear'] * df_factors['month']
+    df_factors['events'] = df_factors['Christmas'] * df_factors['Easter'] * df_factors['event_type_1'] * df_factors['NewYear'] * df_factors['OrthodoxChristmas'] * df_factors['MartinLutherKingDay'] * df_factors['SuperBowl'] * df_factors['ValentinesDay'] * df_factors['PresidentsDay'] * df_factors['StPatricksDay'] * df_factors['OrthodoxEaster'] * df_factors["Mother's day"] * df_factors['MemorialDay'] * df_factors["Father's day"] * df_factors['IndependenceDay'] * df_factors['LaborDay'] * df_factors['ColumbusDay'] * df_factors['Halloween'] * df_factors['VeteransDay'] * df_factors['Thanksgiving'] * df_factors["Cinco De Mayo"] * \
+                           df_factors['item_id_event_type_1'] * df_factors['item_id_Christmas'] * df_factors['item_id_Easter'] * df_factors['item_id_NewYear'] * df_factors['item_id_OrthodoxChristmas'] * df_factors['item_id_MartinLutherKingDay'] * df_factors['item_id_SuperBowl'] * df_factors['item_id_ValentinesDay'] * df_factors['item_id_PresidentsDay'] * df_factors['item_id_StPatricksDay'] * df_factors['item_id_OrthodoxEaster'] * df_factors["item_id_Mother's day"] * df_factors['item_id_MemorialDay'] * df_factors["item_id_Father's day"] * df_factors['item_id_IndependenceDay'] * df_factors['item_id_LaborDay'] * df_factors['item_id_ColumbusDay'] * df_factors['item_id_Halloween'] * df_factors['item_id_VeteransDay'] * df_factors['item_id_Thanksgiving'] * df_factors["item_id_Cinco De Mayo"]
+    df_factors['yhat_mean'] = df_factors['yhat_mean'] / est.ests[-1][1].global_scale_
+    df_factors['y'] = df_factors['y'] / est.ests[-1][1].global_scale_
 
-    def setfactorformat(x, pos):
-        return '%1.2f' % (x + 1)
-    ax.xaxis.set_major_formatter(ticker.FuncFormatter(setfactorformat))
+    df_factors['check'] = df_factors['yhat_mean'] / (df_factors['item_store'] * df_factors['price'] * df_factors['dayofweek'] * df_factors['weekofmonth'] * df_factors['snap'] * df_factors['seasonality'] * df_factors['events'])
 
-    fig.savefig('plots/factors.pdf')
+    return df_factors
+
+
+def calculate_factors_width(est, X):
+    factors = {}
+    for feature in est.ests[-1][1].features:
+        ft = "" if feature.feature_type is None else "_{}".format(
+            feature.feature_type)
+
+        factors[
+            "_".join(feature.feature_group) + ft
+            ] = np.exp(est.ests[-1][1]._pred_feature(X, feature, is_fit=False))
+    factors['date'] = X['date']
+    factors['c'] = X['c']
+    df_factors = pd.DataFrame(factors)
+
+    df_factors['item_store'] = df_factors['item_id'] * df_factors['store_id'] * df_factors['item_id_store_id']
+    df_factors['price'] = df_factors['promo'] * df_factors['price_ratio']
+    df_factors['dayofweek'] = df_factors['dayofweek'] * df_factors['store_id_dayofweek']
+    df_factors['seasonality'] = df_factors['td'] * df_factors['dayofyear'] * df_factors['month']
+    df_factors['events'] = df_factors['Christmas'] * df_factors['Easter'] * df_factors['event_type_1'] * df_factors['NewYear'] * df_factors['OrthodoxChristmas'] * df_factors['MartinLutherKingDay'] * df_factors['SuperBowl'] * df_factors['ValentinesDay'] * df_factors['PresidentsDay'] * df_factors['StPatricksDay'] * df_factors['OrthodoxEaster'] * df_factors["Mother's day"] * df_factors['MemorialDay'] * df_factors["Father's day"] * df_factors['IndependenceDay'] * df_factors['LaborDay'] * df_factors['ColumbusDay'] * df_factors['Halloween'] * df_factors['VeteransDay'] * df_factors['Thanksgiving'] * df_factors["Cinco De Mayo"] * \
+                           df_factors['item_id_event_type_1']
+
+    df_factors['check'] = 1. / (df_factors['c'] * (1 + 1. / (df_factors['item_store'] * df_factors['price'] * df_factors['dayofweek'] * df_factors['weekofmonth'] * df_factors['snap'] * df_factors['seasonality'] * df_factors['events'] * df_factors['yhat_mean_feature'])))
+
+    return df_factors
+
+
+def plot_factors_ts(df, filename):
+    plt.figure()
+    df.index = df['date']
+
+    df['item_store'].plot(label="item_store")
+    df['dayofweek'].plot(label="dayofweek")
+    df['weekofmonth'].plot(label="weekofmonth")
+    df['snap'].plot(label="snap")
+    df['price'].plot(label="price")
+    df['seasonality'].plot(label="seasonality")
+    df['events'].plot(label="events")
+
+#    df['check'].plot(label="check")
+#    df['y'].plot(label="y")
+#    df['yhat_mean'].plot(label="yhat_mean")
+
+    plt.legend(loc=1)
+    plt.ylabel("factors")
+    plt.tight_layout()
+    plt.savefig(filename)
+
+
+def plot_factors_ts_width(df, filename):
+    plt.figure()
+    df.index = df['date']
+
+    df['item_store'].plot(label="item_store")
+    df['dayofweek'].plot(label="dayofweek")
+    df['weekofmonth'].plot(label="weekofmonth")
+    df['snap'].plot(label="snap")
+    df['price'].plot(label="price")
+    df['seasonality'].plot(label="seasonality")
+    df['events'].plot(label="events")
+    df['yhat_mean_feature'].plot(label="yhat_mean")
+
+#    df['check'].plot(label="check")
+#    df['c'].plot(label="c")
+
+    plt.legend(loc=1)
+    plt.ylabel("factors")
+    plt.tight_layout()
+    plt.savefig(filename)
 
 
 def plot_pdf(n, p):
@@ -68,7 +144,7 @@ def plot_pdf(n, p):
 
 def plot_cdf(n, p):
     plt.figure()
-    x = np.linspace(0.0, 30.0, num=100)
+    x = range(30)
     plt.plot(x, nbinom.cdf(x, n, p))
     plt.xlabel("sales")
     plt.tight_layout()
@@ -78,6 +154,8 @@ def plot_cdf(n, p):
 def plot_cdf_truth(cdf_truth, suffix):
     plt.figure()
     plt.hist(cdf_truth, bins=30)
+    if suffix in ['uniform', 'over', 'under', 'broad', 'narrow']:
+        plt.title(suffix)
     plt.xlabel("CDF values")
     plt.ylabel("count")
     plt.tight_layout()
@@ -85,9 +163,12 @@ def plot_cdf_truth(cdf_truth, suffix):
 
 
 def plot_invquants(X, variable, suffix, continuous=False):
-    cols = [X['cdf_truth']<=0.1, X['cdf_truth']<=0.3, X['cdf_truth']<=0.5, X['cdf_truth']<=0.7, X['cdf_truth']<=0.9, X['cdf_truth']<=0.97]
+    if suffix == 'nbinom':
+        cols = [X['cdf_truth']<=0.1, X['cdf_truth']<=0.3, X['cdf_truth']<=0.5, X['cdf_truth']<=0.7, X['cdf_truth']<=0.9, X['cdf_truth']<=0.97]
+    elif suffix == 'poisson':
+        cols = [X['cdf_truth_poisson']<=0.1, X['cdf_truth_poisson']<=0.3, X['cdf_truth_poisson']<=0.5, X['cdf_truth_poisson']<=0.7, X['cdf_truth_poisson']<=0.9, X['cdf_truth_poisson']<=0.97]
     if continuous:
-        bins = [0., 5., 10., 15. ,20., 30., 40., 50., 60., 80., 100.]
+        bins = [0., 5., 10., 15. ,20., 25., 30., 35., 40., 45., 50., 55., 60., 70., 80., 100.]
     else:
         bins = 100
     means_result = binned_statistic(X[variable], cols, bins=bins, statistic='mean')
@@ -107,23 +188,40 @@ def plot_invquants(X, variable, suffix, continuous=False):
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
 
     plt.figure()
-    plt.errorbar(x=bin_centers, y=means10, yerr=stdmean10, linestyle='none', marker='v')
-    plt.errorbar(x=bin_centers, y=means30, yerr=stdmean30, linestyle='none', marker='<')
-    plt.errorbar(x=bin_centers, y=means50, yerr=stdmean50, linestyle='none', marker='.')
-    plt.errorbar(x=bin_centers, y=means70, yerr=stdmean70, linestyle='none', marker='>')
-    plt.errorbar(x=bin_centers, y=means90, yerr=stdmean90, linestyle='none', marker='^')
-    plt.errorbar(x=bin_centers, y=means97, yerr=stdmean97, linestyle='none', marker='s')
-    # plt.errorbar(x=bin_centers, y=means10, linestyle='none', marker='v')
-    # plt.errorbar(x=bin_centers, y=means30, linestyle='none', marker='<')
-    # plt.errorbar(x=bin_centers, y=means50, linestyle='none', marker='.')
-    # plt.errorbar(x=bin_centers, y=means70, linestyle='none', marker='>')
-    # plt.errorbar(x=bin_centers, y=means90, linestyle='none', marker='^')
-    # plt.errorbar(x=bin_centers, y=means97, linestyle='none', marker='s')
-    plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], bin_edges[0], bin_edges[-1])
+    plt.errorbar(x=bin_centers, y=means10, yerr=stdmean10, linestyle='none', marker='v', c='b')
+    plt.errorbar(x=bin_centers, y=means30, yerr=stdmean30, linestyle='none', marker='<', c='g')
+    plt.errorbar(x=bin_centers, y=means50, yerr=stdmean50, linestyle='none', marker='o', c='k')
+    plt.errorbar(x=bin_centers, y=means70, yerr=stdmean70, linestyle='none', marker='>', c='r')
+    plt.errorbar(x=bin_centers, y=means90, yerr=stdmean90, linestyle='none', marker='^', c='y')
+    plt.errorbar(x=bin_centers, y=means97, yerr=stdmean97, linestyle='none', marker='s', c='m')
+    plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], bin_edges[0], bin_edges[-1], color=['b', 'g', 'k', 'r', 'y', 'm'], linestyle='dashed')
     plt.xlabel(variable)
     plt.ylabel("quantile")
     plt.tight_layout()
     plt.savefig('plots/invquant_' + variable + '_' + suffix + '.pdf')
+
+
+def plot_invquants_examples():
+    means10 = [0.05, 0.15, 0.05, 0.15, 0.1]
+    means30 = [0.2, 0.4, 0.2, 0.4, 0.3]
+    means50 = [0.5, 0.5, 0.45, 0.55, 0.5]
+    means70 = [0.8, 0.6, 0.6, 0.8, 0.7]
+    means90 = [0.95, 0.85, 0.85, 0.95, 0.9]
+    means97 = [0.99, 0.95, 0.95, 0.99, 0.97]
+
+    bins = ['broad', 'narrow', 'over', 'under', 'uniform']
+
+    plt.figure()
+    plt.errorbar(x=bins, y=means10, linestyle='none', marker='v', c='b')
+    plt.errorbar(x=bins, y=means30, linestyle='none', marker='<', c='g')
+    plt.errorbar(x=bins, y=means50, linestyle='none', marker='o', c='k')
+    plt.errorbar(x=bins, y=means70, linestyle='none', marker='>', c='r')
+    plt.errorbar(x=bins, y=means90, linestyle='none', marker='^', c='y')
+    plt.errorbar(x=bins, y=means97, linestyle='none', marker='s', c='m')
+    plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], 'broad', 'uniform', color=['b', 'g', 'k', 'r', 'y', 'm'], linestyle='dashed')
+    plt.ylabel("quantile")
+    plt.tight_layout()
+    plt.savefig('plots/invquant_example.pdf')
 
 
 def plot_timeseries(df, suffix, title=''):
@@ -153,6 +251,11 @@ def plotting(df, suffix=''):
     for name, group in predictions_grouped:
         ts_data = group.groupby(['date'])['y', 'yhat_mean'].sum().reset_index()
         plot_timeseries(ts_data, 'item_' + str(name) + suffix)
+
+    predictions_grouped = df[(df['item_id'] == 16) & (df['date'] >= '2016-02-01') & (df['date'] < '2016-05-01')].groupby(['store_id'])
+    for name, group in predictions_grouped:
+        ts_data = group.groupby(['date'])['y', 'yhat_mean'].sum().reset_index()
+        plot_timeseries(ts_data, 'item_16_store_' + str(name) + suffix)
 
 
 def eval_results(yhat_mean, y):
@@ -275,7 +378,7 @@ def get_events(df):
                   "Cinco De Mayo",
                   ]:
         for event_date in df['date'][df['event_name_1'] == event].unique():
-            for event_days in range(-3, 1):
+            for event_days in range(-3, 2):
                 df.loc[df['date'] == pd.to_datetime(event_date).date() + datetime.timedelta(days=event_days), event] = event_days
 
     return df
@@ -289,14 +392,15 @@ def prepare_data(df):
     df['month'] = df['date'].dt.month
     df['weekofmonth'] = np.ceil(df['date'].dt.day / 7)
 
-    df['snap'] = 0
-    df['snap'] = df['snap_CA'][df['store_id'].isin(['CA_1', 'CA_2', 'CA_3', 'CA_4'])]
-    df['snap'] = df['snap_TX'][df['store_id'].isin(['TX_1', 'TX_2', 'TX_3'])]
-    df['snap'] = df['snap_WI'][df['store_id'].isin(['WI_1', 'WI_2', 'WI_3'])]
+    df['snap_CA'] = df.loc[df['store_id'].isin(['CA_1', 'CA_2', 'CA_3', 'CA_4']), 'snap_CA']
+    df['snap_TX'] = df.loc[df['store_id'].isin(['TX_1', 'TX_2', 'TX_3']), 'snap_TX']
+    df['snap_WI'] = df.loc[df['store_id'].isin(['WI_1', 'WI_2', 'WI_3']), 'snap_WI']
+    df['snap'] = df[['snap_CA', 'snap_TX', 'snap_WI']].sum(axis=1)
 
     df['price_ratio'] = df['sell_price'] / df['list_price']
     df['price_ratio'].fillna(1, inplace=True)
     df['price_ratio'].clip(0, 1, inplace=True)
+    df.loc[df['price_ratio'] == 1., 'price_ratio'] = np.nan
 
     df['promo'] = 0
     df.loc[df['price_ratio'] < 1., 'promo'] = 1
@@ -453,10 +557,11 @@ def cb_width_model():
 
     explicit_smoothers = {('dayofyear',): SeasonalSmoother(order=3),
                           ('price_ratio',): IsotonicRegressor(increasing=False),
+                          ('yhat_mean_feature',): IsotonicRegressor(increasing=False),
                          }
 
     features = [
-#        'yhat_mean_feature',
+        'yhat_mean_feature',
         'td',
         'dayofweek',
         'store_id',
@@ -489,14 +594,34 @@ def cb_width_model():
         'Thanksgiving',
         "Cinco De Mayo",
         ('item_id', 'store_id'),
-        ('item_id', 'promo'),
-        ('item_id', 'price_ratio'),
+        # ('item_id', 'promo'),
+        # ('item_id', 'price_ratio'),
         ('store_id', 'dayofweek'),
-        ('item_id', 'dayofweek'),
-        ('snap', 'dayofweek'),
-        ('snap', 'item_id'),
-        ('store_id', 'weekofmonth'),
+        # ('item_id', 'dayofweek'),
+        # ('snap', 'dayofweek'),
+        # ('snap', 'item_id'),
+        # ('store_id', 'weekofmonth'),
         ('item_id', 'event_type_1'),
+        # ('item_id', 'Christmas'),
+        # ('item_id', 'Easter'),
+        # ('item_id', 'NewYear'),
+        # ('item_id', 'OrthodoxChristmas'),
+        # ('item_id', 'MartinLutherKingDay'),
+        # ('item_id', 'SuperBowl'),
+        # ('item_id', 'ValentinesDay'),
+        # ('item_id', 'PresidentsDay'),
+        # ('item_id', 'StPatricksDay'),
+        # ('item_id', 'OrthodoxEaster'),
+        # ('item_id', "Mother's day"),
+        # ('item_id', 'MemorialDay'),
+        # ('item_id', "Father's day"),
+        # ('item_id', 'IndependenceDay'),
+        # ('item_id', 'LaborDay'),
+        # ('item_id', 'ColumbusDay'),
+        # ('item_id', 'Halloween'),
+        # ('item_id', 'VeteransDay'),
+        # ('item_id', 'Thanksgiving'),
+        # ('item_id', "Cinco De Mayo"),
     ]
 
     plobs = [cyclic_boosting.observers.PlottingObserver(iteration=-1)]
@@ -506,6 +631,7 @@ def cb_width_model():
         feature_properties=fp,
         feature_groups=features,
         observers=plobs,
+        weight_column='weights_cb',
         maximal_iterations=50,
         smoother_choice=cyclic_boosting.common_smoothers.SmootherChoiceGroupBy(
             use_regression_type=True,
@@ -540,28 +666,47 @@ def emov_correction(X, group_cols, date_col, horizon=None):
 def mean_fit(X, y, split_date):
     ml_est_mean = cb_mean_model()
     ml_est_mean.fit(X[X['date'] < split_date].copy(), y[X['date'] < split_date])
+
     plot_CB('analysis_CB_mean_iterlast', [ml_est_mean.ests[-1][1].observers[-1]], ml_est_mean.ests[-2][1])
+
+    del X
     return ml_est_mean
 
 
-def mean_predict(X, ml_est_mean):
-    yhat_mean = ml_est_mean.predict(X.copy())
-#    plot_factors(ml_est_mean, X, [359323])
+def mean_predict(X, y, ml_est_mean):
+    yhat_mean = ml_est_mean.predict(X)
+    X['y'] = y
+    X['yhat_mean'] = yhat_mean
+    X = X[(X['date'] >= '2016-02-01') & (X['date'] < '2016-05-01') & (X['item_id'] == 16) & (X['store_id'] == 6)]
+    X = calculate_factors(ml_est_mean, X)
+    plot_factors_ts(X, 'plots/factors_ts.pdf')
+
+    del X
     return yhat_mean
 
 
 def width_fit(X, split_date):
     ml_est_width = cb_width_model()
-    mask = X['date'] >= split_date
-    ml_est_width.fit(X[mask].copy(), np.asarray(X['y'])[mask])
+    ml_est_width.fit(X[X['date'] < split_date].copy(), np.asarray(X['y'])[X['date'] < split_date])
+
     plot_CB('analysis_CB_width_iterlast', [ml_est_width.ests[-1][1].observers[-1]], ml_est_width.ests[-2][1])
+
+    del X
     return ml_est_width
 
 
 def width_predict(X, ml_est_width):
-    c = ml_est_width.predict(X.copy())
+    c = ml_est_width.predict(X)
 #    c[X['yhat_mean'] < 1.] = 1
-    return X['yhat_mean'] + c * X['yhat_mean'] * X['yhat_mean']
+    variance = X['yhat_mean'] + c * X['yhat_mean'] * X['yhat_mean']
+
+    X['c'] = c
+    X = X[(X['date'] >= '2016-02-01') & (X['date'] < '2016-05-01') & (X['item_id'] == 16) & (X['store_id'] == 6)]
+    X = calculate_factors_width(ml_est_width, X)
+    plot_factors_ts_width(X, 'plots/factors_ts_width.pdf')
+
+    del X
+    return variance, c
 
 
 def transform_nbinom(mean, var):
@@ -583,27 +728,33 @@ def random_from_cdf_interval(X, mode='nbinom'):
 
 def cdf_truth(X):
     X['n'], X['p'] = transform_nbinom(X['yhat_mean'], X['yhat_var'])
-    plot_pdf(X['n'][359323], X['p'][359323])
-    plot_cdf(X['n'][359323], X['p'][359323])
+    # item_id: FOODS_3_516, store_id: TX_3
+    # X[(X['date'] == '2016-05-06') & (X['item_id'] == 16) & (X['store_id'] == 6)]
+    plot_pdf(X['n'][146295], X['p'][146295])
+    plot_cdf(X['n'][146295], X['p'][146295])
     X['cdf_truth'] = random_from_cdf_interval(X, mode='nbinom')
     X['cdf_truth_poisson'] = random_from_cdf_interval(X, mode='poisson')
     return X
 
 
 def main(args):
+    # example plots
+    plot_cdf_truth(pd.Series(np.random.rand(100000)), 'uniform')
+    plot_cdf_truth(pd.Series(np.random.triangular(0,0,1,100000)), 'over')
+    plot_cdf_truth(pd.Series(np.random.triangular(0,1,1,100000)), 'under')
+    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0.5,0.5,50000),np.random.triangular(0.5,0.5,1,50000)))), 'broad')
+    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0,0.5,50000),np.random.triangular(0.5,1,1,50000)))), 'narrow')
+    plot_invquants_examples()
+
     df = pd.read_csv('data/M5_FOODS_3_5_2013.csv')
 
     X, y = prepare_data(df)
 
     split_date = '2016-01-01'
 
-    X_mean_fit = X.copy()
-    ml_est_mean = mean_fit(X_mean_fit, y, split_date)
-    del X_mean_fit
+    ml_est_mean = mean_fit(X.copy(), y, split_date)
 
-    X_mean_pred = X.copy()
-    X['yhat_mean'] = mean_predict(X_mean_pred, ml_est_mean)
-    del X_mean_pred
+    X['yhat_mean'] = mean_predict(X.copy(), y, ml_est_mean)
 
     X['y'] = y
     horizon = 2
@@ -616,15 +767,11 @@ def main(args):
     mask = (X['date'] >= split_date) & (pd.notna(X['correction_factor']))
     X['yhat_mean'][mask] = X['correction_factor'][mask] * X['yhat_mean'][mask]
 
-#    X['yhat_mean_feature'] = X['yhat_mean']
+    X['yhat_mean_feature'] = X['yhat_mean']
 
-    X_width_fit = X.copy()
-    ml_est_width = width_fit(X_width_fit, split_date)
-    del X_width_fit
+    ml_est_width = width_fit(X.copy(), split_date)
 
-    X_width_predict = X.copy()
-    X['yhat_var'] = width_predict(X_width_predict, ml_est_width)
-    del X_width_predict
+    X['yhat_var'], X['c'] = width_predict(X.copy(), ml_est_width)
 
     np.random.seed(42)
     X = cdf_truth(X)
