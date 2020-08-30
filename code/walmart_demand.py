@@ -105,8 +105,8 @@ def plot_factors_ts(df, filename):
 #    df['y'].plot(label="y")
 #    df['yhat_mean'].plot(label="yhat_mean")
 
-    plt.legend(loc=1)
-    plt.ylabel("factors")
+    plt.legend(loc=1, fontsize=13)
+    plt.ylabel("factors", fontsize=13)
     plt.tight_layout()
     plt.savefig(filename)
 
@@ -127,8 +127,8 @@ def plot_factors_ts_width(df, filename):
 #    df['check'].plot(label="check")
 #    df['c'].plot(label="c")
 
-    plt.legend(loc=1)
-    plt.ylabel("factors")
+    plt.legend(loc=1, fontsize=13)
+    plt.ylabel("factors", fontsize=13)
     plt.tight_layout()
     plt.savefig(filename)
 
@@ -137,7 +137,7 @@ def plot_pdf(n, p):
     plt.figure()
     x = range(30)
     plt.plot(x, nbinom.pmf(x, n, p))
-    plt.xlabel("sales")
+    plt.xlabel("sales", fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/pdf.pdf')
 
@@ -146,7 +146,7 @@ def plot_cdf(n, p):
     plt.figure()
     x = range(30)
     plt.plot(x, nbinom.cdf(x, n, p))
-    plt.xlabel("sales")
+    plt.xlabel("sales", fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/cdf.pdf')
 
@@ -155,9 +155,9 @@ def plot_cdf_truth(cdf_truth, suffix):
     plt.figure()
     plt.hist(cdf_truth, bins=30)
     if suffix in ['uniform', 'over', 'under', 'broad', 'narrow']:
-        plt.title(suffix)
-    plt.xlabel("CDF values")
-    plt.ylabel("count")
+        plt.title(suffix, fontsize=20)
+    plt.xlabel("CDF values", fontsize=15)
+    plt.ylabel("count", fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/cdf_truth_' + suffix + '.pdf')
 
@@ -195,8 +195,8 @@ def plot_invquants(X, variable, suffix, continuous=False):
     plt.errorbar(x=bin_centers, y=means90, yerr=stdmean90, linestyle='none', marker='^', c='y')
     plt.errorbar(x=bin_centers, y=means97, yerr=stdmean97, linestyle='none', marker='s', c='m')
     plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], bin_edges[0], bin_edges[-1], color=['b', 'g', 'k', 'r', 'y', 'm'], linestyle='dashed')
-    plt.xlabel(variable)
-    plt.ylabel("quantile")
+    plt.xlabel(variable, fontsize=15)
+    plt.ylabel("quantile", fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/invquant_' + variable + '_' + suffix + '.pdf')
 
@@ -219,7 +219,8 @@ def plot_invquants_examples():
     plt.errorbar(x=bins, y=means90, linestyle='none', marker='^', c='y')
     plt.errorbar(x=bins, y=means97, linestyle='none', marker='s', c='m')
     plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], 'broad', 'uniform', color=['b', 'g', 'k', 'r', 'y', 'm'], linestyle='dashed')
-    plt.ylabel("quantile")
+    plt.ylabel("quantile", fontsize=15)
+    plt.xticks(fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/invquant_example.pdf')
 
@@ -229,9 +230,9 @@ def plot_timeseries(df, suffix, title=''):
     df.index = df['date']
     df['y'].plot(style='r', label="sales")
     df['yhat_mean'].plot(style='b', label="prediction")
-    plt.legend()
+    plt.legend(fontsize=15)
 #    plt.title(title)
-    plt.ylabel("sum")
+    plt.ylabel("sum", fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/ts_{}.png'.format(suffix))
 
