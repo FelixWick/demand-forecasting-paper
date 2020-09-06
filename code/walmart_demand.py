@@ -142,10 +142,11 @@ def plot_pdf(n, p):
     plt.savefig('plots/pdf.pdf')
 
 
-def plot_cdf(n, p):
+def plot_cdf(n, p, y):
     plt.figure()
     x = range(30)
     plt.plot(x, nbinom.cdf(x, n, p))
+    plt.vlines(y, ymin=0, ymax=1, linestyles ="dashed")
     plt.xlabel("sales", fontsize=15)
     plt.tight_layout()
     plt.savefig('plots/cdf.pdf')
@@ -275,48 +276,49 @@ def eval_results(yhat_mean, y):
     print('mean(y): {}'.format(mean_y))
 
 
-def wasserstein_2(p, q, n_bins):
+def wasserstein(p, q, n_bins):
     cdf_p = np.cumsum(p)
     cdf_q = np.cumsum(q)
+    # scale by 1/0.5 (0.5 is maximum)
     wasser_distance = 2.0 * np.sum(np.abs(cdf_p - cdf_q)) / len(cdf_p)
     return wasser_distance * n_bins / (n_bins - 1.0)
 
 
-def kullback_2(p, q):
-    mask = p > 0  # limit x -> 0 of x log(x) is zero
-    return np.float(np.sum(p[mask] * (np.log2(p[mask]) - np.log2(q[mask]))))
+# def kullback_2(p, q):
+#     mask = p > 0  # limit x -> 0 of x log(x) is zero
+#     return np.float(np.sum(p[mask] * (np.log2(p[mask]) - np.log2(q[mask]))))
+#
+#
+# def jensen_2(p, q):
+#     m = (p + q) / 2.0
+#     return (kullback_2(p, m) + kullback_2(q, m)) / 2.0
+#
+#
+# def kullback_e(p, q):
+#     mask = p > 0  # limit x -> 0 of x log(x) is zero
+#     return np.float(np.sum(p[mask] * (np.log(p[mask]) - np.log(q[mask]))))
+#
+#
+# def jensen_e(p, q):
+#     m = (p + q) / 2.0
+#     return (kullback_e(p, m) + kullback_e(q, m)) / 2.0
 
 
-def jensen_2(p, q):
-    m = (p + q) / 2.0
-    return (kullback_2(p, m) + kullback_2(q, m)) / 2.0
-
-
-def kullback_e(p, q):
-    mask = p > 0  # limit x -> 0 of x log(x) is zero
-    return np.float(np.sum(p[mask] * (np.log(p[mask]) - np.log(q[mask]))))
-
-
-def jensen_e(p, q):
-    m = (p + q) / 2.0
-    return (kullback_e(p, m) + kullback_e(q, m)) / 2.0
-
-
-def cdf_accuracy(cdf_truth, metric='wasserstein_2'):
+def cdf_accuracy(cdf_truth, metric='wasserstein'):
     counts = cdf_truth.value_counts(bins=100)
     n_cdf_bins = len(counts)
     pmf = counts / np.sum(counts)  # relative frequencies for each bin
     unif = np.full_like(pmf, 1.0 / len(pmf))  # uniform distribution
-    if metric == 'wasserstein_2':
-        divergence = wasserstein_2(unif, pmf, n_cdf_bins)
-    elif metric == 'kullback_2':
-        divergence = kullback_2(unif, pmf)
-    elif metric == 'kullback_e':
-        divergence = kullback_e(unif, pmf)
-    elif metric == 'jensen_2':
-        divergence = jensen_2(unif, pmf)
-    elif metric == 'jensen_e':
-        divergence = jensen_e(unif, pmf)
+    if metric == 'wasserstein':
+        divergence = wasserstein(unif, pmf, n_cdf_bins)
+    # elif metric == 'kullback_2':
+    #     divergence = kullback_2(unif, pmf)
+    # elif metric == 'kullback_e':
+    #     divergence = kullback_e(unif, pmf)
+    # elif metric == 'jensen_2':
+    #     divergence = jensen_2(unif, pmf)
+    # elif metric == 'jensen_e':
+    #     divergence = jensen_e(unif, pmf)
     cdf_acc = np.float(1.0 - np.clip(divergence, a_min=None, a_max=1.0))
     print('cdf accuracy: {}'.format(cdf_acc))
 
@@ -732,7 +734,7 @@ def cdf_truth(X):
     # item_id: FOODS_3_516, store_id: TX_3
     # X[(X['date'] == '2016-05-06') & (X['item_id'] == 16) & (X['store_id'] == 6)]
     plot_pdf(X['n'][146295], X['p'][146295])
-    plot_cdf(X['n'][146295], X['p'][146295])
+    plot_cdf(X['n'][146295], X['p'][146295], X['y'][146295])
     X['cdf_truth'] = random_from_cdf_interval(X, mode='nbinom')
     X['cdf_truth_poisson'] = random_from_cdf_interval(X, mode='poisson')
     return X
@@ -778,16 +780,16 @@ def main(args):
     X = cdf_truth(X)
 
     mask = X['date'] >= split_date
-    cdf_accuracy(X['cdf_truth'][mask], 'wasserstein_2')
-    cdf_accuracy(X['cdf_truth_poisson'][mask], 'wasserstein_2')
-    cdf_accuracy(X['cdf_truth'][mask], 'kullback_2')
-    cdf_accuracy(X['cdf_truth_poisson'][mask], 'kullback_2')
-    cdf_accuracy(X['cdf_truth'][mask], 'kullback_e')
-    cdf_accuracy(X['cdf_truth_poisson'][mask], 'kullback_e')
-    cdf_accuracy(X['cdf_truth'][mask], 'jensen_2')
-    cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_2')
-    cdf_accuracy(X['cdf_truth'][mask], 'jensen_e')
-    cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_e')
+    cdf_accuracy(X['cdf_truth'][mask], 'wasserstein')
+    cdf_accuracy(X['cdf_truth_poisson'][mask], 'wasserstein')
+    # cdf_accuracy(X['cdf_truth'][mask], 'kullback_2')
+    # cdf_accuracy(X['cdf_truth_poisson'][mask], 'kullback_2')
+    # cdf_accuracy(X['cdf_truth'][mask], 'kullback_e')
+    # cdf_accuracy(X['cdf_truth_poisson'][mask], 'kullback_e')
+    # cdf_accuracy(X['cdf_truth'][mask], 'jensen_2')
+    # cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_2')
+    # cdf_accuracy(X['cdf_truth'][mask], 'jensen_e')
+    # cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_e')
 
     plot_cdf_truth(X['cdf_truth'][mask], 'nbinom')
     plot_cdf_truth(X['cdf_truth_poisson'][mask], 'poisson')
