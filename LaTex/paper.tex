@@ -68,7 +68,7 @@ Demand forecasting is one of the main challenges for retailers and is at the cor
 
 Because of the access to  Big Data, a vast amount of these data associated with demand, such as historic sales records, information about promotional events or advertisements, pricing information, local weather at retail locations, seasonal information, as well as many further variables, can be captured, stored, and processed. Different methods, such as traditional univariate time series forecasting or modern supervised machine learning algorithms, can then be used to predict the demand distribution for individual products sold at specific locations, corrected for censored data. Demand forecasting for retailers often requires to predict millions of item-store combinations daily, and traditional univariate time series forecasting methods operate on each of these many individual time series separately. Machine learning, on the contrary, optimizes all individual time series together, improving the generalizability of the method by exploiting common aspects between them. This leads to a drastic reduction in variance of the model, and in turn to an improvement of the forecast quality of each of the individual time series. Furthermore, machine learning enables a natural way to include the many exogenous variables influencing demand as features of the model, what reduces also the bias compared to traditional time series forecasting approaches which mainly rely on the historic sales.
 
-In order to make operational decisions, an optimal demand point estimator has to be defined, that can be used to derive ordering decisions in the replenishment process of the retailer. The ordering decision process is complicated by a range of factors: Even in the case of perfect demand forecasts, the decision maker has to consider lot-sizes defined by the wholesaler or manufacturer as well as to balance conflicting metrics to reach an optimal decision. Ordering too few items may result in out of stock situations leading to unrealized demand and unsatisfied customers. Ordering too many items results in excess inventory, which increases transport and storage costs and, in the case of perishable goods, excessive waste, as spoiled items need to be disposed of at additional cost and potentially even environmental impact. This situation is particularly noticeable in the so called ``ultra-fresh'' category, which includes items such as bakery products, ready-meals, fresh diary products, or certain meat products such as ground meat. These items typically have a shelf-life ranging from less than a business day to a few business days at most, with a continuous spectrum in between, depending on the exact item. In many situations, additional constraints have to be considered to reach an optimal ordering decision: Delivery cycles of items may vary depending on the type of item and the wholesaler or manufacturer from which they are procured. Retailers also operate at a given service level to guarantee that a certain level of demand can be fulfilled. The exact service level typically depends on the overall business policy of the retailer and may also depend on individual products, ranging from ``never-out-of-stock'' items to a service level exceeding, e.g., 90 percent. Therefore, demand forecasts are ideally made in the form of full individual probability density distributions, from which optimal point estimators can be derived, which in turn serve as starting point to determine the subsequent ordering decisions.
+In order to make operational decisions, an optimal demand point estimator has to be defined, that can be used to derive ordering decisions in the replenishment process of the retailer. The ordering decision process is complicated by a range of factors: Even in the case of perfect demand forecasts, the decision maker has to consider lot sizes defined by the wholesaler or manufacturer as well as to balance conflicting metrics to reach an optimal decision. Ordering too few items may result in out of stock situations leading to unrealized demand and unsatisfied customers. Ordering too many items results in excess inventory, which increases transport and storage costs and, in the case of perishable goods, excessive waste, as spoiled items need to be disposed of at additional cost and potentially even environmental impact. This situation is particularly noticeable in the so called ``ultra-fresh'' category, which includes items such as bakery products, ready-meals, fresh dairy products, or certain meat products such as ground meat. These items typically have a shelf-life ranging from less than a business day to a few business days at most, with a continuous spectrum in between, depending on the exact item. In many situations, additional constraints have to be considered to reach an optimal ordering decision: Delivery cycles of items may vary depending on the type of item and the wholesaler or manufacturer from which they are procured. Retailers also operate at a given service level to guarantee that a certain level of demand can be fulfilled. The exact service level typically depends on the overall business policy of the retailer and may also depend on individual products, ranging from ``never-out-of-stock'' items to a service level exceeding, e.g., 90 percent. Therefore, demand forecasts are ideally made in the form of full individual probability density distributions, from which optimal point estimators can be derived, which in turn serve as starting point to determine the subsequent ordering decisions.
 
 The remainder of the paper is organized as follows: We first review the relevant literature and existing work in sec. \ref{sec:LitRev}. We then describe our method to predict individual negative binomial PDFs by means of a parametric approach including two distinct machine learning models for mean of variance in sec. \ref{sec:pdfEstimation}. After that, we describe novel techniques for the qualitative and quantitative evaluation of PDF predictions in sec. \ref{sec:pdfEvaluation}. And finally, we present a demand forecasting example to show an application of our methods in sec. \ref{sec:example}.
 
@@ -198,7 +198,7 @@ Using the example of the normal distribution with $\mathcal{N}(0,1)$ as shown in
 \begin{figure}
 \begin{center}
 \includegraphics[width=8cm]{../figures/PdfCdf}
-\caption{\label{fig:PdfCdf} Probability distribution function and cumulative distribution function of a normal distribution.}
+\caption{\label{fig:PdfCdf} Probability distribution function $f(x)$ and cumulative distribution function of a normal distribution $F(x)$.}
 \end{center}
 \end{figure}
 
@@ -214,11 +214,11 @@ A histogram of the actually observed CDF values for each individual PDF predicti
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=2.5cm]{../figures/cdf_truth_uniform}
-\includegraphics[width=2.5cm]{../figures/cdf_truth_broad}
-\includegraphics[width=2.5cm]{../figures/cdf_truth_narrow}
-\includegraphics[width=2.5cm]{../figures/cdf_truth_over}
-\includegraphics[width=2.5cm]{../figures/cdf_truth_under}
+\includegraphics[scale=0.25]{../figures/cdf_truth_uniform}
+\includegraphics[scale=0.25]{../figures/cdf_truth_broad}
+\includegraphics[scale=0.25]{../figures/cdf_truth_narrow}
+\includegraphics[scale=0.25]{../figures/cdf_truth_over}
+\includegraphics[scale=0.25]{../figures/cdf_truth_under}
 \caption{\label{fig:cdf_histos} Histogram of actually observed CDF values for different cases of estimating the full PDF compared to the expected uniform distribution:
 correct prediction (``uniform''), variance overestimated (``broad''), variance underestimated (``narrow''), mean overestimated (``over''), mean underestimated (``under'')}
 \end{center}
@@ -240,7 +240,7 @@ In order to judge whether the overall shape of the predicted distributions is pr
 \begin{figure}
 \begin{center}
 \includegraphics[width=8cm]{../figures/invquant_example}
-\caption{\label{fig:invquant_example} Inverse quantile profile plots comparing all predicted PDFs to the corresponding observed events. In the leftmost two columns, the outcome is illustrated if the estimate of the variance is biased, the center and center-right columns illustrate cases for which the mean estimation is biased, and the far right column shows the expected behavior if all predictions are correct.}
+\caption{\label{fig:invquant_example} Five different inverse quantile profile plots (separated into columns by dotted vertical lines), each comparing all its predicted PDFs to the corresponding observed events. In the leftmost two columns, the outcome is illustrated if the estimate of the variance is biased, the center and center-right columns illustrate cases for which the mean estimation is biased, and the far right column shows the expected behavior if all predictions are correct.}
 \end{center}
 \end{figure}
 
@@ -275,7 +275,7 @@ For our experiments, we use data from 2013-01-01 to 2016-05-22, that describe th
 \subsection{Mean Estimation}
 \label{sec:example_mean}
 
-As discussed earlier, we assume that each individual sale can be described by a Poisson-like process and we assume a negative binomial distribution to model the individual probability distribution of each sales event. As a first step, we use Cyclic Boosting to predict the mean of the distribution.
+As discussed earlier, we assume that each individual sale can be described by a Poisson-like process and we assume a negative binomial distribution to model the individual probability distribution of each sales event. As a first step, we use Cyclic Boosting (as described in sec. \ref{sec:CB}) to predict the mean of the distribution.
 
 \noindent
 This model uses the following variables as features: categorical variables for \texttt{store\_id} and \texttt{item\_id}, several derived variables that are constructed from the time-series of the sales records describing trend and seasonality (days since beginning of 2013 as linear trend as well as day of week, day of year, month, and week of month), time windows around the events given in the data set (7 days before until 3 days after for Christmas and Easter, and 3 days before until 1 day after for all other events like New Year or Thanksgiving), a flag denoting a promotion, and the ratio of reduced (\texttt{sell\_price}) and normal price (\texttt{list\_price}). We also include various two-dimensional combinations of these features. In these cases, one of the two dimensions is either \texttt{store\_id} or \texttt{item\_id}, allowing the machine learning model to learn characteristics of individual locations and products.
@@ -294,7 +294,7 @@ We use the mean absolute deviation (MAD) as well as the mean squared error (MSE)
 
 \subsection{Variance Estimation}
 
-The second model, also based on Cyclic Boosting, is used to estimate the variance of the negative binomial distribution. The data are split into training and test set as above and in addition the mean predictions for each individual product-location-date combination are fixed in the variance model as stated by \eqn \eqref{eqn:loss_likelihood}. This effectively means that the mean predictions are created in-sample for the training period using the fully trained and validated model for the mean discussed above.
+The second model, based on Cyclic Boosting in its negative binomial width mode described in sec. \ref{sec:cb_width}, is used to estimate the variance of the negative binomial distribution. The data are split into training and test set as above and in addition the mean predictions for each individual product-location-date combination are fixed in the variance model as stated by \eqn \eqref{eqn:loss_likelihood}. This effectively means that the mean predictions are created in-sample for the training period using the fully trained and validated model for the mean discussed above.
 
 \noindent
 In this model focusing on the variance, we use the same set of features as for the mean model described above in sec. \ref{sec:example_mean}, except for dropping most of the two-dimensional combinations (only keeping \texttt{item\_id} - \texttt{store\_id}, \texttt{store\_id} - day of week, and \texttt{item\_id} - event type features) and adding the in-sample mean prediction as feature. An example for the resulting PDF and CDF predictions for item \texttt{FOODS\_3\_516} in store \texttt{TX\_3} on 2016-05-06, together with the corresponding observed sales value, is shown in \fig \ref{fig:pdf_example}.
@@ -317,7 +317,7 @@ The different \texttt{item\_store} values for mean (higher than $1$) and varianc
 \includegraphics[width=4cm]{../figures/ts_item_16_store_6}
 \includegraphics[width=4cm]{../figures/factors_ts}
 \includegraphics[width=4cm]{../figures/factors_ts_width}
-\caption{\label{fig:factor_plots} Time series of mean predictions and sales (upper left plot), constituting factors of the mean predictions (upper right plot), and constituting factors of the variance predictions (lower plot), for a specific product-location combination from beginning of February to end of April 2016. For both mean and variance predictions, the most granular constituting factors are aggregated, i.e. multiplied, for the sake of visualization.}
+\caption{\label{fig:factor_plots} Time series of mean predictions (with the surrounding transparent band simplistically indicating a standard deviation as square root of the corresponding variance predictions) and sales (upper left plot), constituting factors of the mean predictions (upper right plot), and constituting factors of the variance predictions (lower plot), for a specific product-location combination from beginning of February to end of April 2016. For both mean and variance predictions, the most granular constituting factors are aggregated, i.e. multiplied, for the sake of visualization.}
 \end{center}
 \end{figure}
 
@@ -393,7 +393,7 @@ Once the full probability density functions are forecasted, their evaluation pos
 \section{Profile Histograms}
 \label{sec:profile}
 
-In many cases, scatter plots are used to study the behavior of two distributions or sets of data points visually. However, even for moderate amount of data, this approach becomes quickly difficult. To illustrate this, a sample of $(x,y)$ data points was obtained in the following way: The distribution of $x$ values was obtained by generating 5,000 samples of Gaussian distributed random numbers $X \sim {\cal N}(0.0,2.0)$ and the $y$ values are obtained via $Y \sim X +  {\cal N}(2.0,1.5)$. \fig \ref{fig:scatter} shows the marginal distributions for $x$ and $y$ as well as a scatter plot of $x$ vs. $y$.
+In many cases, scatter plots are used to study the behavior of two distributions or sets of data points visually. However, even for moderate amount of data, this approach quickly becomes difficult. To illustrate this, a sample of $(x,y)$ data points was obtained in the following way: The distribution of $x$ values was obtained by generating 5,000 samples of Gaussian distributed random numbers $X \sim {\cal N}(0.0,2.0)$ and the $y$ values are obtained via $Y \sim X +  {\cal N}(2.0,1.5)$. \fig \ref{fig:scatter} shows the marginal distributions for $x$ and $y$ as well as a scatter plot of $x$ vs. $y$.
 
 \begin{figure}
 \begin{center}

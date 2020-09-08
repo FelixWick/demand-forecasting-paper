@@ -220,6 +220,7 @@ def plot_invquants_examples():
     plt.errorbar(x=bins, y=means90, linestyle='none', marker='^', c='y')
     plt.errorbar(x=bins, y=means97, linestyle='none', marker='s', c='m')
     plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], 'broad', 'uniform', color=['b', 'g', 'k', 'r', 'y', 'm'], linestyle='dashed')
+    plt.vlines([0.5, 1.5, 2.5, 3.5], 0, 1, linestyle='dotted')
     plt.ylabel("quantile", fontsize=15)
     plt.xticks(fontsize=15)
     plt.tight_layout()
@@ -231,6 +232,7 @@ def plot_timeseries(df, suffix, title=''):
     df.index = df['date']
     df['y'].plot(style='r', label="sales")
     df['yhat_mean'].plot(style='b', label="prediction")
+    plt.fill_between(df.index, df['yhat_mean'] - np.sqrt(df['yhat_var']), df['yhat_mean'] + np.sqrt(df['yhat_var']), alpha=0.2)
     plt.legend(fontsize=15)
 #    plt.title(title)
     plt.ylabel("sum", fontsize=15)
@@ -239,24 +241,24 @@ def plot_timeseries(df, suffix, title=''):
 
 
 def plotting(df, suffix=''):
-    df = df[['y', 'yhat_mean', 'item_id', 'store_id', 'date']]
+    df = df[['y', 'yhat_mean', 'yhat_var', 'item_id', 'store_id', 'date']]
 
-    ts_data = df.groupby(['date'])[['y', 'yhat_mean']].sum().reset_index()
+    ts_data = df.groupby(['date'])[['y', 'yhat_mean', 'yhat_var']].sum().reset_index()
     plot_timeseries(ts_data, 'full' + suffix, 'all')
 
     predictions_grouped = df.groupby(['store_id'])
     for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean'].sum().reset_index()
+        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
         plot_timeseries(ts_data, 'store_' + str(name) + suffix)
 
     predictions_grouped = df.groupby(['item_id'])
     for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean'].sum().reset_index()
+        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
         plot_timeseries(ts_data, 'item_' + str(name) + suffix)
 
     predictions_grouped = df[(df['item_id'] == 16) & (df['date'] >= '2016-02-01') & (df['date'] < '2016-05-01')].groupby(['store_id'])
     for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean'].sum().reset_index()
+        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
         plot_timeseries(ts_data, 'item_16_store_' + str(name) + suffix)
 
 
