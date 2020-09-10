@@ -45,7 +45,7 @@ headings=normal]{scrartcl}
 \author[1]{Moritz Wolf \thanks{martin.hahn@blueyonder.com}}
 \author[2]{Trapti Singhal \thanks{trapti.singhal@blueyonder.com}}
 \author[1]{Michael Feindt \thanks{michael.feindt@blueyonder.com}}
-\affil[1]{\small Blue Yonder GmbH (Karlsruhe, Germany)}
+\affil[1]{\small Blue Yonder GmbH (Ohiostra{\ss}e 8, 76149 Karlsruhe, Germany)}
 \affil[2]{\small Blue Yonder India Private Limited (Bengaluru, India)}
 \affil[3]{\small IUBH Internationale Hochschule (Erfurt, Germany)}
 
@@ -220,7 +220,7 @@ A histogram of the actually observed CDF values for each individual PDF predicti
 \includegraphics[scale=0.25]{../figures/cdf_truth_over}
 \includegraphics[scale=0.25]{../figures/cdf_truth_under}
 \caption{\label{fig:cdf_histos} Histogram of actually observed CDF values for different cases of estimating the full PDF compared to the expected uniform distribution:
-correct prediction (``uniform''), variance overestimated (``broad''), variance underestimated (``narrow''), mean overestimated (``over''), mean underestimated (``under'')}
+correct prediction (a: ``uniform''), variance overestimated (b: ``broad''), variance underestimated (c: ``narrow''), mean overestimated (d: ``over''), mean underestimated (e: ``under'')}
 \end{center}
 \end{figure}
 
@@ -303,7 +303,7 @@ In this model focusing on the variance, we use the same set of features as for t
 \begin{center}
 \includegraphics[width=4cm]{../figures/pdf}
 \includegraphics[width=4cm]{../figures/cdf}
-\caption{\label{fig:pdf_example} Predicted PDF (left) and CDF (right) for a specific product-location-date combination. The dashed vertical line in the CDF plot represents the actually observed sales, corresponding to a CDF value just under $0.3$.}
+\caption{\label{fig:pdf_example} Predicted PDF (a) and CDF (b) for a specific product-location-date combination. The dashed vertical line in the CDF plot represents the actually observed sales, corresponding to a CDF value just under $0.3$.}
 \end{center}
 \end{figure}
 
@@ -317,7 +317,7 @@ The different \texttt{item\_store} values for mean (higher than $1$) and varianc
 \includegraphics[width=4cm]{../figures/ts_item_16_store_6}
 \includegraphics[width=4cm]{../figures/factors_ts}
 \includegraphics[width=4cm]{../figures/factors_ts_width}
-\caption{\label{fig:factor_plots} Time series of mean predictions (with the surrounding transparent band simplistically indicating a standard deviation as square root of the corresponding variance predictions) and sales (upper left plot), constituting factors of the mean predictions (upper right plot), and constituting factors of the variance predictions (lower plot), for a specific product-location combination from beginning of February to end of April 2016. For both mean and variance predictions, the most granular constituting factors are aggregated, i.e. multiplied, for the sake of visualization.}
+\caption{\label{fig:factor_plots} Time series of mean predictions (with the surrounding transparent band simplistically indicating a standard deviation as square root of the corresponding variance predictions) and sales (a), constituting factors of the mean predictions (b), and constituting factors of the variance predictions (c), for a specific product-location combination from beginning of February to end of April 2016. For both mean and variance predictions, the most granular constituting factors are aggregated, i.e. multiplied, for the sake of visualization.}
 \end{center}
 \end{figure}
 
@@ -334,7 +334,7 @@ While the Poisson histogram shows a clear pattern of too narrow PDF predictions 
 \includegraphics[width=4cm]{../figures/cdf_truth_poisson}
 \includegraphics[width=4cm]{../figures/cdf_truth_nbinom_larger1}
 \includegraphics[width=4cm]{../figures/cdf_truth_poisson_larger1}
-\caption{\label{fig:cdf_demand} Histograms of ex post observed target CDF values of the corresponding individual PDF predictions (to be compared to a uniform distribution) for our negative binomial model (left) and a simpler Poisson model for comparison (right), using all product-location-day combinations in the test period (upper two plots). In order to show the effect of slow-sellers, the lower two plots exclude all samples with mean predictions lower than $1.0$.}
+\caption{\label{fig:cdf_demand} Histograms of ex post observed target CDF values of the corresponding individual PDF predictions (to be compared to a uniform distribution) for our negative binomial model (a) and a simpler Poisson model for comparison (b), using all product-location-day combinations in the test period. In order to show the effect of slow-sellers, both negative binomial (c) and Poisson model (d) histograms are also shown using samples with mean predictions higher than $1.0$ only.}
 \end{center}
 \end{figure}
 
@@ -344,7 +344,7 @@ Using the inverse quantile profile plots introduced earlier, the prediction qual
 \begin{center}
 \includegraphics[width=4cm]{../figures/invquant_dayofweek_nbinom}
 \includegraphics[width=4cm]{../figures/invquant_dayofweek_poisson}
-\caption{\label{fig:invquant_dayofweek} Inverse quantile profile plot for the different days of week on the $x$-axis (from Monday to Sunday) aggregated over all product-location-day combinations in the test period, for our negative binomial model (left) and a simpler Poisson model for comparison (right).}
+\caption{\label{fig:invquant_dayofweek} Inverse quantile profile plot for the different days of week on the $x$-axis (from Monday to Sunday) aggregated over all product-location-day combinations in the test period, for our negative binomial model (a) and a simpler Poisson model for comparison (b).}
 \end{center}
 \end{figure}
 
@@ -357,7 +357,7 @@ In a real-live situation with a live supply chain project for a customer, a more
 \begin{center}
 \includegraphics[width=4cm]{../figures/invquant_yhat_mean_nbinom}
 \includegraphics[width=4cm]{../figures/invquant_yhat_mean_poisson}
-\caption{\label{fig:invquant_mean} Inverse quantile profile plot for mean predictions on the $x$-axis aggregated over all product-location-day combinations in the test period, for our negative binomial model (left) and a simpler Poisson model for comparison (right).}
+\caption{\label{fig:invquant_mean} Inverse quantile profile plot for mean predictions on the $x$-axis aggregated over all product-location-day combinations in the test period, for our negative binomial model (a) and a simpler Poisson model for comparison (b).}
 \end{center}
 \end{figure}
 

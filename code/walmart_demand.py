@@ -91,6 +91,7 @@ def calculate_factors_width(est, X):
 
 def plot_factors_ts(df, filename):
     plt.figure()
+    ax = plt.axes()
     df.index = df['date']
 
     df['item_store'].plot(label="item_store")
@@ -106,13 +107,15 @@ def plot_factors_ts(df, filename):
 #    df['yhat_mean'].plot(label="yhat_mean")
 
     plt.legend(loc=1, fontsize=13)
-    plt.ylabel("factors", fontsize=13)
+    plt.ylabel("mean factors", fontsize=13)
+    plt.text(-0.1, -0.24, 'b)', fontsize=15, transform=ax.transAxes)
     plt.tight_layout()
     plt.savefig(filename)
 
 
 def plot_factors_ts_width(df, filename):
     plt.figure()
+    ax = plt.axes()
     df.index = df['date']
 
     df['item_store'].plot(label="item_store")
@@ -128,38 +131,55 @@ def plot_factors_ts_width(df, filename):
 #    df['c'].plot(label="c")
 
     plt.legend(loc=1, fontsize=13)
-    plt.ylabel("factors", fontsize=13)
+    plt.ylabel("variance factors", fontsize=13)
+    plt.text(-0.1, -0.24, 'c)', fontsize=15, transform=ax.transAxes)
     plt.tight_layout()
     plt.savefig(filename)
 
 
 def plot_pdf(n, p):
     plt.figure()
+    ax = plt.axes()
     x = range(30)
     plt.plot(x, nbinom.pmf(x, n, p))
     plt.xlabel("sales", fontsize=15)
-    plt.tight_layout()
+    plt.title('PDF', fontsize=15)
+    plt.text(-0.05, -0.15, 'a)', fontsize=15, transform=ax.transAxes)
+    plt.tight_layout(rect=(0,0,1,0.99))
     plt.savefig('plots/pdf.pdf')
 
 
 def plot_cdf(n, p, y):
     plt.figure()
+    ax = plt.axes()
     x = range(30)
     plt.plot(x, nbinom.cdf(x, n, p))
     plt.vlines(y, ymin=0, ymax=1, linestyles ="dashed")
     plt.xlabel("sales", fontsize=15)
-    plt.tight_layout()
+    plt.title('CDF', fontsize=15)
+    plt.text(-0.05, -0.15, 'b)', fontsize=15, transform=ax.transAxes)
+    plt.tight_layout(rect=(0,0,1,0.99))
     plt.savefig('plots/cdf.pdf')
 
 
-def plot_cdf_truth(cdf_truth, suffix):
+def plot_cdf_truth(cdf_truth, suffix, ordering=''):
     plt.figure()
+    ax = plt.axes()
     plt.hist(cdf_truth, bins=30)
-    if suffix in ['uniform', 'over', 'under', 'broad', 'narrow']:
+    if suffix == 'nbinom':
+        plt.title('NBD', fontsize=15)
+    elif suffix == 'poisson':
+        plt.title('Poisson', fontsize=15)
+    elif suffix == 'nbinom_larger1':
+        plt.title("NBD (>1)", fontsize=15)
+    elif suffix == 'poisson_larger1':
+        plt.title("Poisson (>1)", fontsize=15)
+    else:
         plt.title(suffix, fontsize=20)
     plt.xlabel("CDF values", fontsize=15)
     plt.ylabel("count", fontsize=15)
-    plt.tight_layout()
+    plt.text(-0.15, -0.15, ordering, fontsize=15, transform=ax.transAxes)
+    plt.tight_layout(rect=(0,0,1,0.99))
     plt.savefig('plots/cdf_truth_' + suffix + '.pdf')
 
 
@@ -189,6 +209,7 @@ def plot_invquants(X, variable, suffix, continuous=False):
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
 
     plt.figure()
+    ax = plt.axes()
     plt.errorbar(x=bin_centers, y=means10, yerr=stdmean10, linestyle='none', marker='v', c='b')
     plt.errorbar(x=bin_centers, y=means30, yerr=stdmean30, linestyle='none', marker='<', c='g')
     plt.errorbar(x=bin_centers, y=means50, yerr=stdmean50, linestyle='none', marker='o', c='k')
@@ -197,8 +218,14 @@ def plot_invquants(X, variable, suffix, continuous=False):
     plt.errorbar(x=bin_centers, y=means97, yerr=stdmean97, linestyle='none', marker='s', c='m')
     plt.hlines([0.1, 0.3, 0.5, 0.7, 0.9, 0.97], bin_edges[0], bin_edges[-1], color=['b', 'g', 'k', 'r', 'y', 'm'], linestyle='dashed')
     plt.xlabel(variable, fontsize=15)
-    plt.ylabel("quantile", fontsize=15)
-    plt.tight_layout()
+    plt.ylabel("quantile", fontsize=14)
+    if suffix == 'nbinom':
+        plt.title('NBD', fontsize=15)
+        plt.text(-0.1, -0.15, 'a)', fontsize=15, transform=ax.transAxes)
+    elif suffix == 'poisson':
+        plt.title('Poisson', fontsize=15)
+        plt.text(-0.1, -0.15, 'b)', fontsize=15, transform=ax.transAxes)
+    plt.tight_layout(rect=(0,0,1,0.99))
     plt.savefig('plots/invquant_' + variable + '_' + suffix + '.pdf')
 
 
@@ -227,17 +254,21 @@ def plot_invquants_examples():
     plt.savefig('plots/invquant_example.pdf')
 
 
-def plot_timeseries(df, suffix, title=''):
+def plot_timeseries(df, suffix, title='', textbox=None, errorband=False):
     plt.figure()
+    ax = plt.axes()
     df.index = df['date']
     df['y'].plot(style='r', label="sales")
     df['yhat_mean'].plot(style='b', label="prediction")
-    plt.fill_between(df.index, df['yhat_mean'] - np.sqrt(df['yhat_var']), df['yhat_mean'] + np.sqrt(df['yhat_var']), alpha=0.2)
+    if errorband:
+        plt.fill_between(df.index, df['yhat_mean'] - np.sqrt(df['yhat_var']), df['yhat_mean'] + np.sqrt(df['yhat_var']), alpha=0.2)
     plt.legend(fontsize=15)
 #    plt.title(title)
     plt.ylabel("sum", fontsize=15)
+    if textbox is not None:
+        plt.text(-0.1, -0.22, textbox, fontsize=15, transform=ax.transAxes)
     plt.tight_layout()
-    plt.savefig('plots/ts_{}.png'.format(suffix))
+    plt.savefig('plots/ts_{}.pdf'.format(suffix))
 
 
 def plotting(df, suffix=''):
@@ -246,20 +277,20 @@ def plotting(df, suffix=''):
     ts_data = df.groupby(['date'])[['y', 'yhat_mean', 'yhat_var']].sum().reset_index()
     plot_timeseries(ts_data, 'full' + suffix, 'all')
 
-    predictions_grouped = df.groupby(['store_id'])
-    for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
-        plot_timeseries(ts_data, 'store_' + str(name) + suffix)
-
-    predictions_grouped = df.groupby(['item_id'])
-    for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
-        plot_timeseries(ts_data, 'item_' + str(name) + suffix)
+    # predictions_grouped = df.groupby(['store_id'])
+    # for name, group in predictions_grouped:
+    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
+    #     plot_timeseries(ts_data, 'store_' + str(name) + suffix)
+    #
+    # predictions_grouped = df.groupby(['item_id'])
+    # for name, group in predictions_grouped:
+    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
+    #     plot_timeseries(ts_data, 'item_' + str(name) + suffix)
 
     predictions_grouped = df[(df['item_id'] == 16) & (df['date'] >= '2016-02-01') & (df['date'] < '2016-05-01')].groupby(['store_id'])
     for name, group in predictions_grouped:
         ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
-        plot_timeseries(ts_data, 'item_16_store_' + str(name) + suffix)
+        plot_timeseries(ts_data, 'item_16_store_' + str(name) + suffix, textbox='a)', errorband=True)
 
 
 def eval_results(yhat_mean, y):
@@ -744,11 +775,11 @@ def cdf_truth(X):
 
 def main(args):
     # example plots
-    plot_cdf_truth(pd.Series(np.random.rand(100000)), 'uniform')
-    plot_cdf_truth(pd.Series(np.random.triangular(0,0,1,100000)), 'over')
-    plot_cdf_truth(pd.Series(np.random.triangular(0,1,1,100000)), 'under')
-    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0.5,0.5,50000),np.random.triangular(0.5,0.5,1,50000)))), 'broad')
-    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0,0.5,50000),np.random.triangular(0.5,1,1,50000)))), 'narrow')
+    plot_cdf_truth(pd.Series(np.random.rand(100000)), 'uniform', "a)")
+    plot_cdf_truth(pd.Series(np.random.triangular(0,0,1,100000)), 'over', "d)")
+    plot_cdf_truth(pd.Series(np.random.triangular(0,1,1,100000)), 'under', "e)")
+    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0.5,0.5,50000),np.random.triangular(0.5,0.5,1,50000)))), 'broad', "b)")
+    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0,0.5,50000),np.random.triangular(0.5,1,1,50000)))), 'narrow', "c)")
     plot_invquants_examples()
 
     df = pd.read_csv('data/M5_FOODS_3_5_2013.csv')
@@ -793,10 +824,10 @@ def main(args):
     # cdf_accuracy(X['cdf_truth'][mask], 'jensen_e')
     # cdf_accuracy(X['cdf_truth_poisson'][mask], 'jensen_e')
 
-    plot_cdf_truth(X['cdf_truth'][mask], 'nbinom')
-    plot_cdf_truth(X['cdf_truth_poisson'][mask], 'poisson')
-    plot_cdf_truth(X['cdf_truth'][mask & (X['yhat_mean'] >= 1.)], 'nbinom_larger1')
-    plot_cdf_truth(X['cdf_truth_poisson'][mask & (X['yhat_mean'] >= 1.)], 'poisson_larger1')
+    plot_cdf_truth(X['cdf_truth'][mask], 'nbinom', "a)")
+    plot_cdf_truth(X['cdf_truth_poisson'][mask], 'poisson', "b)")
+    plot_cdf_truth(X['cdf_truth'][mask & (X['yhat_mean'] > 1.)], 'nbinom_larger1', "c)")
+    plot_cdf_truth(X['cdf_truth_poisson'][mask & (X['yhat_mean'] > 1.)], 'poisson_larger1', "d)")
 
     plot_invquants(X[mask], 'yhat_mean', 'nbinom', continuous=True)
     plot_invquants(X[mask], 'store_id', 'nbinom')
