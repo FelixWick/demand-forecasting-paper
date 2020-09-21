@@ -1,3 +1,10 @@
+% Springer
+%\documentclass[smallextended]{svjour3}  
+
+%Standard Article
+%\documentclass[10pt,twoside=true, twocolumn]{article}
+
+% KOMA Article
 \documentclass[BCOR=1mm, DIV=calc,10pt,
 twoside=true,
 twocolumn,
@@ -39,18 +46,52 @@ headings=normal]{scrartcl}
 
 \title{Demand Forecasting of individual Probability Density Functions with Machine Learning}
 
-\author[1]{Felix Wick \thanks{felix.wick@blueyonder.com}}
-\author[3]{Ulrich Kerzel \thanks{u.kerzel@iubh-fernstudium.de}}
-\author[1]{Martin Hahn \thanks{martin.hahn@blueyonder.com}}
-\author[1]{Moritz Wolf \thanks{moritz.wolf@blueyonder.com}}
-\author[2]{Trapti Singhal \thanks{trapti.singhal@blueyonder.com}}
-\author[1]{Michael Feindt \thanks{michael.feindt@blueyonder.com}}
+%Springer
+%\author{
+%\underline{Felix Wick} \and
+%Ulrich Kerzel \and
+%Martin Hahn \and
+%Moritz Wolf \and
+%Trapti Singhal \and
+%Michael Feindt}
+%
+%\institute{ 
+%F. Wick (corresponding author) \at 
+%Blue Yonder GmbH \\ \email{felix.wick@blueyonder.com}
+%\and
+%U. Kerzel \at 
+%IUBH Internationale Hochschule \\ \email{u.kerzel@iubh-fernstudium.de}
+%\and
+%M. Hahn \at
+%Blue Yonder GmbH \\ \email{martin.hahn@blueyonder.com}
+%\and
+%M. Wolf \at 
+%Blue Yonder GmbH \\ \email{moritz.wolf@blueyonder.com}
+%\and
+%T. Singhal \at
+%Blue Yonder India Private Limited \\ \email{trapti.singhal@blueyonder.com}
+%\and
+%M. Feindt \at
+%Blue Yonder GmbH \\ \email{michael.feindt@blueyonder.com}
+%}
+
+
+
+\author[1]{Felix Wick } %\thanks{felix.wick@blueyonder.com}}
+\author[3]{Ulrich Kerzel }%\thanks{u.kerzel@iubh-fernstudium.de}}
+\author[1]{Martin Hahn }%\thanks{martin.hahn@blueyonder.com}}
+\author[1]{Moritz Wolf }%\thanks{moritz.wolf@blueyonder.com}}
+\author[2]{Trapti Singhal }%\thanks{trapti.singhal@blueyonder.com}}
+\author[1]{Michael Feindt }%\thanks{michael.feindt@blueyonder.com}}
 \affil[1]{\small Blue Yonder GmbH (Ohiostra{\ss}e 8, 76149 Karlsruhe, Germany)}
 \affil[2]{\small Blue Yonder India Private Limited (Bengaluru, India)}
 \affil[3]{\small IUBH Internationale Hochschule (Erfurt, Germany)}
 
 
 \date{}
+% Springer
+%\titlerunning{Demand Forecasting as a Probability Distribution}
+%\authorrunning{F. Wick et al.}
 
 \maketitle
 
@@ -59,7 +100,8 @@ Demand forecasting is a central component for many aspects of supply chain opera
 \end{abstract}
 
 {Keywords: \textbf{explainable machine learning, demand forecasting, probability distribution}}
-
+%Springer
+%\keywords{explainable machine learning \and demand forecasting \and probability distribution \and quantile plot}
 
 \section{Introduction}
 \label{sec:intro}
@@ -197,7 +239,7 @@ Using the example of the normal distribution with $\mathcal{N}(0,1)$ as shown in
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{../figures/PdfCdf}
+\includegraphics[width=8cm]{figs/PdfCdf}
 \caption{\label{fig:PdfCdf} Probability distribution function $f(x)$ and cumulative distribution function of a normal distribution $F(x)$.}
 \end{center}
 \end{figure}
@@ -214,11 +256,11 @@ A histogram of the actually observed CDF values for each individual PDF predicti
 
 \begin{figure}
 \begin{center}
-\includegraphics[scale=0.25]{../figures/cdf_truth_uniform}
-\includegraphics[scale=0.25]{../figures/cdf_truth_broad}
-\includegraphics[scale=0.25]{../figures/cdf_truth_narrow}
-\includegraphics[scale=0.25]{../figures/cdf_truth_over}
-\includegraphics[scale=0.25]{../figures/cdf_truth_under}
+\includegraphics[scale=0.25]{figs/cdf_truth_uniform}
+\includegraphics[scale=0.25]{figs/cdf_truth_broad}
+\includegraphics[scale=0.25]{figs/cdf_truth_narrow}
+\includegraphics[scale=0.25]{figs/cdf_truth_over}
+\includegraphics[scale=0.25]{figs/cdf_truth_under}
 \caption{\label{fig:cdf_histos} Histogram of actually observed CDF values for different cases of estimating the full PDF compared to the expected uniform distribution:
 correct prediction (a: ``uniform''), variance overestimated (b: ``broad''), variance underestimated (c: ``narrow''), mean overestimated (d: ``over''), mean underestimated (e: ``under'')}
 \end{center}
@@ -239,7 +281,7 @@ In order to judge whether the overall shape of the predicted distributions is pr
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{../figures/invquant_example}
+\includegraphics[width=8cm]{figs/invquant_example}
 \caption{\label{fig:invquant_example} Five different inverse quantile profile plots (separated into columns by dotted vertical lines), each comparing all its predicted PDFs to the corresponding observed events. In the leftmost two columns, the outcome is illustrated if the estimate of the variance is biased, the center and center-right columns illustrate cases for which the mean estimation is biased, and the far right column shows the expected behavior if all predictions are correct.}
 \end{center}
 \end{figure}
@@ -287,7 +329,7 @@ We use the mean absolute deviation (MAD) as well as the mean squared error (MSE)
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{../figures/ts_full}
+\includegraphics[width=8cm]{figs/ts_full}
 \caption{\label{fig:mean_prediction} Time series of mean predictions and sales in test period summed over all products and stores.}
 \end{center}
 \end{figure}
@@ -301,8 +343,8 @@ In this model focusing on the variance, we use the same set of features as for t
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{../figures/pdf}
-\includegraphics[width=4cm]{../figures/cdf}
+\includegraphics[width=4cm]{figs/pdf}
+\includegraphics[width=4cm]{figs/cdf}
 \caption{\label{fig:pdf_example} Predicted PDF (a) and CDF (b) for a specific product-location-date combination. The dashed vertical line in the CDF plot represents the actually observed sales, corresponding to a CDF value just under $0.3$.}
 \end{center}
 \end{figure}
@@ -314,9 +356,9 @@ The different \texttt{item\_store} values for mean (higher than $1$) and varianc
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{../figures/ts_item_16_store_6}
-\includegraphics[width=4cm]{../figures/factors_ts}
-\includegraphics[width=4cm]{../figures/factors_ts_width}
+\includegraphics[width=4cm]{figs/ts_item_16_store_6}
+\includegraphics[width=4cm]{figs/factors_ts}
+\includegraphics[width=4cm]{figs/factors_ts_width}
 \caption{\label{fig:factor_plots} Time series of mean predictions (with the surrounding transparent band simplistically indicating a standard deviation as square root of the corresponding variance predictions) and sales (a), constituting factors of the mean predictions (b), and constituting factors of the variance predictions (c), for a specific product-location combination from beginning of February to end of April 2016. For both mean and variance predictions, the most granular constituting factors are aggregated, i.e. multiplied, for the sake of visualization.}
 \end{center}
 \end{figure}
@@ -330,10 +372,10 @@ While the Poisson histogram shows a clear pattern of too narrow PDF predictions 
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{../figures/cdf_truth_nbinom}
-\includegraphics[width=4cm]{../figures/cdf_truth_poisson}
-\includegraphics[width=4cm]{../figures/cdf_truth_nbinom_larger1}
-\includegraphics[width=4cm]{../figures/cdf_truth_poisson_larger1}
+\includegraphics[width=4cm]{figs/cdf_truth_nbinom}
+\includegraphics[width=4cm]{figs/cdf_truth_poisson}
+\includegraphics[width=4cm]{figs/cdf_truth_nbinom_larger1}
+\includegraphics[width=4cm]{figs/cdf_truth_poisson_larger1}
 \caption{\label{fig:cdf_demand} Histograms of ex post observed target CDF values of the corresponding individual PDF predictions (to be compared to a uniform distribution) for our negative binomial model (a) and a simpler Poisson model for comparison (b), using all product-location-day combinations in the test period. In order to show the effect of slow-sellers, both negative binomial (c) and Poisson model (d) histograms are also shown using samples with mean predictions higher than $1.0$ only.}
 \end{center}
 \end{figure}
@@ -342,8 +384,8 @@ Using the inverse quantile profile plots introduced earlier, the prediction qual
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{../figures/invquant_dayofweek_nbinom}
-\includegraphics[width=4cm]{../figures/invquant_dayofweek_poisson}
+\includegraphics[width=4cm]{figs/invquant_dayofweek_nbinom}
+\includegraphics[width=4cm]{figs/invquant_dayofweek_poisson}
 \caption{\label{fig:invquant_dayofweek} Inverse quantile profile plot for the different days of week on the $x$-axis (from Monday to Sunday) aggregated over all product-location-day combinations in the test period, for our negative binomial model (a) and a simpler Poisson model for comparison (b).}
 \end{center}
 \end{figure}
@@ -355,8 +397,8 @@ In a real-live situation with a live supply chain project for a customer, a more
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{../figures/invquant_yhat_mean_nbinom}
-\includegraphics[width=4cm]{../figures/invquant_yhat_mean_poisson}
+\includegraphics[width=4cm]{figs/invquant_yhat_mean_nbinom}
+\includegraphics[width=4cm]{figs/invquant_yhat_mean_poisson}
 \caption{\label{fig:invquant_mean} Inverse quantile profile plot for mean predictions on the $x$-axis aggregated over all product-location-day combinations in the test period, for our negative binomial model (a) and a simpler Poisson model for comparison (b).}
 \end{center}
 \end{figure}
@@ -382,7 +424,40 @@ Demand forecasting remains a crucial step in operational planning for retailers.
 Once the full probability density functions are forecasted, their evaluation poses significant challenges: Common metrics, such as the mean absolute deviation or mean squared error, only take point estimates into account and are generally not suitable for the evaluation of predicted probability distributions. Furthermore, since the distributions are predicted for individual events, statistical techniques aiming at the comparison of distributions using many events cannot be used in general. Instead, novel techniques exploiting the probability integral transform, namely the histogram of observed CDF values of the predicted individual PDFs as well as inverse quantile profile plots, allow a detailed investigation into the behavior of the predictions. Finally, a quantitative assessment resulting in a single number can be obtained using metrics such as the earth mover distance in a comparison between the histogram of observed CDF values and the expected uniform distribution.
 
 
+% Authors must disclose all relationships or interests that 
+% could have direct or potential influence or impart bias on 
+% the work: 
+%
+%\section*{Declarations}
+%
+%\subsection*{Funding}
+%No external funding was obtained for this work.
+%
+%\subsection*{Conflict of interest}
+%
+%\noindent
+%Authors Felix Wick and Michael Feindt applied for a US patent ``A System and Method of Cyclic Boosting for Explainable Supervised Machine Learning''.
+%
+%\noindent
+%Authors Felix Wick, Martin Hahn, and Moritz Wolf applied for a US patent ``Causal Factor Machine Learning with Individual Negative Binomial Probability Density Function Estimation''.
+%
+%\noindent
+%Authors Felix Wick and Trapti Singhal applied for a US patent ``Evaluation of Predictions as Individual Probability Density Functions''.
+%
+%
+%\subsection*{Availability of data and material}
+%Data used in this work are public \cite{kaggle_data}
+%
+%\subsection*{Code availability}
+%The details of the code are available from \cite{Wick2019}
+%
+%\subsection*{Authors' contributions}
+%F. Wick: Code examples and manuscript text, U. Kerzel: manuscript text, M. Hahn, M. Wolf, T. Singhal, M. Feindt: revision 
+
 \bibliography{paper}
+
+% Springer
+%\bibliographystyle{spmpsci}      % mathematics and physical sciences
 \bibliographystyle{ieeetr}
 
 %%
@@ -397,7 +472,7 @@ In many cases, scatter plots are used to study the behavior of two distributions
 
 \begin{figure}
 \begin{center}
-\includegraphics[scale=0.5]{../figures/marginal} \includegraphics[scale=0.5]{../figures/scatter}
+\includegraphics[scale=0.5]{figs/marginal} \includegraphics[scale=0.5]{figs/scatter}
 \caption{\label{fig:scatter} Marginal distribution and scatter plot of variables $X$ and $Y$.}
 \end{center}
 \end{figure}
@@ -406,7 +481,7 @@ Although the simple linear correlation between $X$ and $Y$ is apparent in the sc
 
  \begin{figure}
 \begin{center}
-\includegraphics[scale=0.5]{../figures/profile}
+\includegraphics[scale=0.5]{figs/profile}
 \caption{\label{fig:profile} Profile histogram of variables $X$ and $Y$.}
 \end{center}
 \end{figure}
