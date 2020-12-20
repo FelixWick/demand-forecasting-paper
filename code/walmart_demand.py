@@ -101,6 +101,8 @@ def plot_factors_ts(df, filename):
     df['price'].plot(label="price")
     df['seasonality'].plot(label="seasonality")
     df['events'].plot(label="events")
+    df['correction_factor'].plot(style='b:', label="correction")
+#    df['sales_ewma'].plot(label="sales_ewma")
 
 #    df['check'].plot(label="check")
 #    df['y'].plot(label="y")
@@ -254,17 +256,21 @@ def plot_invquants_examples():
     plt.savefig('plots/invquant_example.pdf')
 
 
-def plot_timeseries(df, suffix, title='', textbox=None, errorband=False):
+def plot_timeseries(df, suffix, title='', textbox=None, errorband=False, split_line=False):
     plt.figure()
     ax = plt.axes()
     df.index = df['date']
     df['y'].plot(style='r', label="sales")
-    df['yhat_mean'].plot(style='b', label="prediction")
+    df['yhat_mean'].plot(style='b-.', label="final prediction")
+    if suffix != 'full':
+        df['yhat_mean_causal'].plot(style='b:', label="ML prediction")
     if errorband:
         plt.fill_between(df.index, df['yhat_mean'] - np.sqrt(df['yhat_var']), df['yhat_mean'] + np.sqrt(df['yhat_var']), alpha=0.2)
     plt.legend(fontsize=15)
 #    plt.title(title)
     plt.ylabel("sum", fontsize=15)
+    if split_line:
+        plt.vlines('2016-01-01', ymin=0, ymax=80, linestyles="dashed")
     if textbox is not None:
         plt.text(-0.1, -0.22, textbox, fontsize=15, transform=ax.transAxes)
     plt.tight_layout()
@@ -272,25 +278,37 @@ def plot_timeseries(df, suffix, title='', textbox=None, errorband=False):
 
 
 def plotting(df, suffix=''):
-    df = df[['y', 'yhat_mean', 'yhat_var', 'item_id', 'store_id', 'date']]
+    df = df[['y', 'yhat_mean', 'yhat_var', 'item_id', 'store_id', 'date', 'correction_factor']]
+    df.loc[df['date'] < '2016-01-01', 'correction_factor'] = 1
+    df['yhat_mean_causal'] = df['yhat_mean'] / df['correction_factor']
+    df.loc[df['date'] < '2016-01-01', 'yhat_mean'] = np.nan
 
-    ts_data = df.groupby(['date'])[['y', 'yhat_mean', 'yhat_var']].sum().reset_index()
+    predictions = df[df['date'] >= '2016-01-01']
+    ts_data = predictions.groupby(['date'])[['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal']].sum().reset_index()
     plot_timeseries(ts_data, 'full' + suffix, 'all')
 
-    # predictions_grouped = df.groupby(['store_id'])
-    # for name, group in predictions_grouped:
-    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
-    #     plot_timeseries(ts_data, 'store_' + str(name) + suffix)
-    #
+    predictions_grouped = df.groupby(['store_id'])
+    for name, group in predictions_grouped:
+        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
+        plot_timeseries(ts_data, 'store_' + str(name) + suffix)
+
     # predictions_grouped = df.groupby(['item_id'])
     # for name, group in predictions_grouped:
-    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
+    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
     #     plot_timeseries(ts_data, 'item_' + str(name) + suffix)
 
-    predictions_grouped = df[(df['item_id'] == 16) & (df['date'] >= '2016-02-01') & (df['date'] < '2016-05-01')].groupby(['store_id'])
+    predictions_grouped = df.groupby(['item_id', 'store_id'])
     for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var'].sum().reset_index()
-        plot_timeseries(ts_data, 'item_16_store_' + str(name) + suffix, textbox='a)', errorband=True)
+        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
+        plot_timeseries(ts_data, 'item_' + str(name) + suffix)
+
+    predictions = df[(df['item_id'] == 16) & (df['store_id'] == 6) & (df['date'] >= '2016-02-01') & (df['date'] < '2016-05-01')]
+    ts_data = predictions.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
+    plot_timeseries(ts_data, 'item_16_store_6' + suffix, textbox='a)', errorband=True)
+
+    predictions = df[(df['item_id'] == 16) & (df['store_id'] == 2) & (df['date'] < '2016-05-01')]
+    ts_data = predictions.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
+    plot_timeseries(ts_data, 'item_16_store_2_res' + suffix, textbox='a)', errorband=False, split_line=True)
 
 
 def eval_results(yhat_mean, y):
@@ -457,6 +475,10 @@ def prepare_data(df):
     label_encoder = MultiLabelEncoder(selected_columns=encoding_cols, unknowns_as_missing=True)
     df = label_encoder.fit_transform(df)
 
+#    df['sales_ewma'] = emov_feature(df, ['store_id', 'item_id', 'dayofweek'])
+#    df['sales_ewma'] = emov_feature(df, ['store_id', 'item_id'])
+#    df.loc[df['sales_ewma'] < 0.1, 'sales_ewma'] = np.nan
+
     y = np.asarray(df['sales'])
     X = df.drop(columns='sales')
     return X, y
@@ -495,6 +517,7 @@ def feature_properties():
     fp['VeteransDay'] = flags.IS_ORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp['Thanksgiving'] = flags.IS_ORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp["Cinco De Mayo"] = flags.IS_ORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
+#    fp['sales_ewma'] = flags.IS_CONTINUOUS | flags.HAS_MISSING
     return fp
 
 
@@ -505,6 +528,7 @@ def cb_mean_model():
                          }
 
     features = [
+#        'sales_ewma',
         'td',
         'dayofweek',
         'store_id',
@@ -715,10 +739,8 @@ def mean_predict(X, y, ml_est_mean):
     X['yhat_mean'] = yhat_mean
     X = X[(X['date'] >= '2016-02-01') & (X['date'] < '2016-05-01') & (X['item_id'] == 16) & (X['store_id'] == 6)]
     X = calculate_factors(ml_est_mean, X)
-    plot_factors_ts(X, 'plots/factors_ts.pdf')
 
-    del X
-    return yhat_mean
+    return yhat_mean, X
 
 
 def width_fit(X, split_date):
@@ -773,6 +795,16 @@ def cdf_truth(X):
     return X
 
 
+def emov_feature(X, group_cols):
+    X.sort_values(['date'], inplace=True)
+    X_grouped = X.groupby(group_cols)
+#    alpha = 0.05
+    alpha = 0.25
+#    horizon = 1
+    horizon = 2
+    return X_grouped['sales'].apply(lambda x: x.shift(horizon).ewm(alpha=alpha, ignore_na=True).mean())
+
+
 def main(args):
     # example plots
     plot_cdf_truth(pd.Series(np.random.rand(100000)), 'uniform', "a)")
@@ -790,7 +822,7 @@ def main(args):
 
     ml_est_mean = mean_fit(X.copy(), y, split_date)
 
-    X['yhat_mean'] = mean_predict(X.copy(), y, ml_est_mean)
+    X['yhat_mean'], df_factors = mean_predict(X.copy(), y, ml_est_mean)
 
     X['y'] = y
     horizon = 2
@@ -802,6 +834,9 @@ def main(args):
         X = emov_correction(X, ['store_id', 'item_id'], 'date', horizon)
     mask = (X['date'] >= split_date) & (pd.notna(X['correction_factor']))
     X['yhat_mean'][mask] = X['correction_factor'][mask] * X['yhat_mean'][mask]
+
+    df_factors['correction_factor'] = X.loc[(X['date'] >= '2016-02-01') & (X['date'] < '2016-05-01') & (X['item_id'] == 16) & (X['store_id'] == 6), 'correction_factor']
+    plot_factors_ts(df_factors, 'plots/factors_ts.pdf')
 
     X['yhat_mean_feature'] = X['yhat_mean']
 
@@ -840,7 +875,7 @@ def main(args):
     X['yhat_var'] = np.round(X['yhat_var'], 2)
     X[['item_id', 'store_id', 'date', 'y', 'yhat_mean', 'yhat_var']][mask].to_csv('forecasts_2016.csv', index=False)
 
-    plotting(X[mask])
+    plotting(X[X['date'] >= '2015-11-01'])
 #    plotting(X)
 
     eval_results(X['yhat_mean'][mask], X['y'][mask])
