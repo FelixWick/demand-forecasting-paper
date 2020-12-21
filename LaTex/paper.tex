@@ -388,16 +388,16 @@ We use the mean absolute deviation (MAD) as well as the mean squared error (MSE)
 
 \begin{table}[h!]
 \begin{center}
-\caption{Accuracy metrics for the predicted mean values for three different model setups: (a) ML model without lagged target information but subsequent residual correction, (b) ML model including lagged target information by means of two EMWA features without residual correction, and (c) ML model from (b) with residual correction.}
+\caption{Accuracy metrics for the predicted mean values for three different model setups: a) ML model without lagged target information but subsequent residual correction, b) ML model including lagged target information by means of two EMWA features without residual correction, and c) ML model from b) with residual correction.}
 \label{tab:mad_mse}
-\begin{tabular}{p{4cm}|c|c}
- & \textbf{MAD} & \textbf{MSE} \\
+\begin{tabular}{c|p{4cm}|c|c}
+ & & \textbf{MAD} & \textbf{MSE} \\
 \hline
-\textbf{no EWMA features,\newline residual correction} & 1.65 & 10.09 \\
+a) & no EWMA features,\newline residual correction & 1.65 & 10.09 \\
 \hline
-\textbf{EWMA features,\newline no residual correction} & 1.69 & 10.84 \\
+b) & EWMA features,\newline no residual correction & 1.69 & 10.84 \\
 \hline
-\textbf{EWMA features,\newline residual correction} & 1.68 & 10.41
+c) & EWMA features,\newline residual correction & 1.68 & 10.41
 \end{tabular}
 \end{center}
 \end{table}
