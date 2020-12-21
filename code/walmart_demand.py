@@ -181,6 +181,7 @@ def plot_cdf_truth(cdf_truth, suffix, ordering=''):
     plt.xlabel("CDF values", fontsize=15)
     plt.ylabel("count", fontsize=15)
     plt.text(-0.15, -0.15, ordering, fontsize=15, transform=ax.transAxes)
+    plt.hlines(100000./30, xmin=0, xmax=1, linestyles ="dashed")
     plt.tight_layout(rect=(0,0,1,0.99))
     plt.savefig('plots/cdf_truth_' + suffix + '.pdf')
 
@@ -287,20 +288,20 @@ def plotting(df, suffix=''):
     ts_data = predictions.groupby(['date'])[['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal']].sum().reset_index()
     plot_timeseries(ts_data, 'full' + suffix, 'all')
 
-    predictions_grouped = df.groupby(['store_id'])
-    for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
-        plot_timeseries(ts_data, 'store_' + str(name) + suffix)
+    # predictions_grouped = df.groupby(['store_id'])
+    # for name, group in predictions_grouped:
+    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
+    #     plot_timeseries(ts_data, 'store_' + str(name) + suffix)
 
     # predictions_grouped = df.groupby(['item_id'])
     # for name, group in predictions_grouped:
     #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
     #     plot_timeseries(ts_data, 'item_' + str(name) + suffix)
 
-    predictions_grouped = df.groupby(['item_id', 'store_id'])
-    for name, group in predictions_grouped:
-        ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
-        plot_timeseries(ts_data, 'item_' + str(name) + suffix)
+    # predictions_grouped = df.groupby(['item_id', 'store_id'])
+    # for name, group in predictions_grouped:
+    #     ts_data = group.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
+    #     plot_timeseries(ts_data, 'item_' + str(name) + suffix)
 
     predictions = df[(df['item_id'] == 16) & (df['store_id'] == 6) & (df['date'] >= '2016-02-01') & (df['date'] < '2016-05-01')]
     ts_data = predictions.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
@@ -475,8 +476,9 @@ def prepare_data(df):
     label_encoder = MultiLabelEncoder(selected_columns=encoding_cols, unknowns_as_missing=True)
     df = label_encoder.fit_transform(df)
 
-#    df['sales_ewma'] = emov_feature(df, ['store_id', 'item_id', 'dayofweek'])
-#    df['sales_ewma'] = emov_feature(df, ['store_id', 'item_id'])
+#    df['sales_ewma_dow'] = emov_feature(df, ['store_id', 'item_id', 'dayofweek'], 0.05, 1)
+#    df['sales_ewma'] = emov_feature(df, ['store_id', 'item_id'], 0.25, 2)
+#    df.loc[df['sales_ewma_dow'] < 0.1, 'sales_ewma'] = np.nan
 #    df.loc[df['sales_ewma'] < 0.1, 'sales_ewma'] = np.nan
 
     y = np.asarray(df['sales'])
@@ -517,7 +519,8 @@ def feature_properties():
     fp['VeteransDay'] = flags.IS_ORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp['Thanksgiving'] = flags.IS_ORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
     fp["Cinco De Mayo"] = flags.IS_ORDERED | flags.HAS_MISSING | flags.MISSING_NOT_LEARNED
-#    fp['sales_ewma'] = flags.IS_CONTINUOUS | flags.HAS_MISSING
+    fp['sales_ewma'] = flags.IS_CONTINUOUS | flags.HAS_MISSING
+    fp['sales_ewma_dow'] = flags.IS_CONTINUOUS | flags.HAS_MISSING
     return fp
 
 
@@ -529,6 +532,7 @@ def cb_mean_model():
 
     features = [
 #        'sales_ewma',
+#        'sales_ewma_dow',
         'td',
         'dayofweek',
         'store_id',
@@ -795,23 +799,19 @@ def cdf_truth(X):
     return X
 
 
-def emov_feature(X, group_cols):
+def emov_feature(X, group_cols, alpha, horizon):
     X.sort_values(['date'], inplace=True)
     X_grouped = X.groupby(group_cols)
-#    alpha = 0.05
-    alpha = 0.25
-#    horizon = 1
-    horizon = 2
     return X_grouped['sales'].apply(lambda x: x.shift(horizon).ewm(alpha=alpha, ignore_na=True).mean())
 
 
 def main(args):
     # example plots
-    plot_cdf_truth(pd.Series(np.random.rand(100000)), 'uniform', "a)")
-    plot_cdf_truth(pd.Series(np.random.triangular(0,0,1,100000)), 'over', "d)")
-    plot_cdf_truth(pd.Series(np.random.triangular(0,1,1,100000)), 'under', "e)")
-    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0.5,0.5,50000),np.random.triangular(0.5,0.5,1,50000)))), 'broad', "b)")
-    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0,0.5,50000),np.random.triangular(0.5,1,1,50000)))), 'narrow', "c)")
+#    plot_cdf_truth(pd.Series(np.random.rand(100000)), 'uniform', "a)")
+    plot_cdf_truth(pd.Series(np.random.triangular(0,0,1,100000)), 'over', "c)")
+    plot_cdf_truth(pd.Series(np.random.triangular(0,1,1,100000)), 'under', "d)")
+    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0.5,0.5,50000),np.random.triangular(0.5,0.5,1,50000)))), 'broad', "a)")
+    plot_cdf_truth(pd.Series(np.concatenate((np.random.triangular(0,0,0.5,50000),np.random.triangular(0.5,1,1,50000)))), 'narrow', "b)")
     plot_invquants_examples()
 
     df = pd.read_csv('data/M5_FOODS_3_5_2013.csv')
