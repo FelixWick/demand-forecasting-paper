@@ -309,7 +309,7 @@ def plotting(df, suffix=''):
 
     predictions = df[(df['item_id'] == 16) & (df['store_id'] == 2) & (df['date'] < '2016-05-01')]
     ts_data = predictions.groupby(['date'])['y', 'yhat_mean', 'yhat_var', 'yhat_mean_causal'].sum().reset_index()
-    plot_timeseries(ts_data, 'item_16_store_2_res' + suffix, textbox='a)', errorband=False, split_line=True)
+    plot_timeseries(ts_data, 'item_16_store_2_res' + suffix, errorband=False, split_line=True)
 
 
 def eval_results(yhat_mean, y):
