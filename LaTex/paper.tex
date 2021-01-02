@@ -242,7 +242,7 @@ Using the example of the normal distribution with $\mathcal{N}(0,1)$ as shown in
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{figs/PdfCdf}
+\includegraphics[width=8cm]{PdfCdf}
 \caption{\label{fig:PdfCdf} PDF $f(x)$ and CDF $F(x)$ of a normal distribution.}
 \end{center}
 \end{figure}
@@ -259,10 +259,10 @@ A histogram of the actually observed CDF values for each individual PDF predicti
 
 \begin{figure}
 \begin{center}
-\includegraphics[scale=0.25]{figs/cdf_truth_broad}
-\includegraphics[scale=0.25]{figs/cdf_truth_narrow}
-\includegraphics[scale=0.25]{figs/cdf_truth_over}
-\includegraphics[scale=0.25]{figs/cdf_truth_under}
+\includegraphics[scale=0.25]{cdf_truth_broad}
+\includegraphics[scale=0.25]{cdf_truth_narrow}
+\includegraphics[scale=0.25]{cdf_truth_over}
+\includegraphics[scale=0.25]{cdf_truth_under}
 \caption{\label{fig:cdf_histos} Histogram of actually observed CDF values for different cases of estimating the full PDF compared to the expected uniform distribution (dashed horizontal line in each of the plots): variance overestimated (a: ``broad''), variance underestimated (b: ``narrow''), mean overestimated (c: ``over''), mean underestimated (d: ``under'')}
 \end{center}
 \end{figure}
@@ -282,7 +282,7 @@ In order to judge whether the overall shape of the predicted distributions is es
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{figs/invquant_example}
+\includegraphics[width=8cm]{invquant_example}
 \caption{\label{fig:invquant_example} Five different inverse quantile profile plots (separated into columns by dotted vertical lines), each comparing all its predicted PDFs to the corresponding observed events. In the leftmost two columns, the outcome is illustrated if the estimate of the variance is biased, the center and center-right columns illustrate cases for which the mean estimation is biased, and the far right column shows the expected behavior if all predictions are correct.}
 \end{center}
 \end{figure}
@@ -320,7 +320,7 @@ The effect of temporal confounding is illustrated in \fig \ref{fig:temporal_conf
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=5cm]{figs/temporal_confounding}
+\includegraphics[width=5cm]{temporal_confounding}
 \caption{\label{fig:temporal_confounding} Temporal confounding by an exogenous variable $X_{t-1, t}$ stable over the time steps $t-1$ and $t$, creating a spurious autocorrelation between $Y_{t-1}$ and $Y_t$.}
 \end{center}
 \end{figure}
@@ -401,7 +401,7 @@ c) & EWMA features,\newline residual correction & 1.68 & 10.41
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{figs/ts_full}
+\includegraphics[width=8cm]{ts_full}
 \caption{\label{fig:mean_prediction} Time series of final mean predictions as well as sales in test period summed over all products and stores.}
 \end{center}
 \end{figure}
@@ -410,7 +410,7 @@ To visualize the operation principle of the residual correction method, \fig \re
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{figs/ts_item_16_store_2_res}
+\includegraphics[width=8cm]{ts_item_16_store_2_res}
 \caption{\label{fig:ts_res} Time series of mean predictions, before (machine learning prediction) and after (final prediction) residual correction, as well as sales for a specific product-location combination. In addition to the test period in 2016, the last two months of the training period are shown as well (the dashed vertical line marking the transition from training to test period), in order to better demonstrate the workings of the residual correction.}
 \end{center}
 \end{figure}
@@ -427,8 +427,8 @@ In this model focusing on the variance, we use the same set of features as for t
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{figs/pdf}
-\includegraphics[width=4cm]{figs/cdf}
+\includegraphics[width=4cm]{pdf}
+\includegraphics[width=4cm]{cdf}
 \caption{\label{fig:pdf_example} Predicted PDF (a) and CDF (b) for a specific product-location-date combination. The dashed vertical line in the CDF plot represents the actually observed sales, corresponding to a CDF value just under $0.3$.}
 \end{center}
 \end{figure}
@@ -437,9 +437,9 @@ In this model focusing on the variance, we use the same set of features as for t
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{figs/ts_item_16_store_6}
-\includegraphics[width=4cm]{figs/factors_ts}
-\includegraphics[width=4cm]{figs/factors_ts_width}
+\includegraphics[width=4cm]{ts_item_16_store_6}
+\includegraphics[width=4cm]{factors_ts}
+\includegraphics[width=4cm]{factors_ts_width}
 \caption{\label{fig:factor_plots} Time series of mean predictions (with the surrounding transparent band simplistically indicating a standard deviation as square root of the corresponding variance predictions), before (machine learning prediction) and after residual correction (final prediction), as well as sales (a), constituting factors of the mean predictions (including the factor of the residual correction) (b), and constituting factors of the variance predictions (c), for a specific product-location combination from beginning of February to end of April 2016. For both mean and variance predictions, the most granular constituting factors are aggregated, i.e., multiplied, for the sake of visualization.}
 \end{center}
 \end{figure}
@@ -453,10 +453,10 @@ The different \texttt{item\_store} values for mean (higher than $1$) and varianc
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{figs/cdf_truth_nbinom}
-\includegraphics[width=4cm]{figs/cdf_truth_poisson}
-\includegraphics[width=4cm]{figs/cdf_truth_nbinom_larger1}
-\includegraphics[width=4cm]{figs/cdf_truth_poisson_larger1}
+\includegraphics[width=4cm]{cdf_truth_nbinom}
+\includegraphics[width=4cm]{cdf_truth_poisson}
+\includegraphics[width=4cm]{cdf_truth_nbinom_larger1}
+\includegraphics[width=4cm]{cdf_truth_poisson_larger1}
 \caption{\label{fig:cdf_demand} Histograms of ex post observed target CDF values of the corresponding individual PDF predictions (to be compared to a uniform distribution) for our negative binomial model (a) and a simpler Poisson model for comparison (b), using all product-location-day combinations in the test period. In order to show the effect of slow-sellers, both negative binomial (c) and Poisson model (d) histograms are also shown using samples with mean predictions higher than $1.0$ only.}
 \end{center}
 \end{figure}
@@ -465,8 +465,8 @@ Using the inverse quantile profile plots introduced in sec. \ref{sec:invquant_pl
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{figs/invquant_dayofweek_nbinom}
-\includegraphics[width=4cm]{figs/invquant_dayofweek_poisson}
+\includegraphics[width=4cm]{invquant_dayofweek_nbinom}
+\includegraphics[width=4cm]{invquant_dayofweek_poisson}
 \caption{\label{fig:invquant_dayofweek} Inverse quantile profile plot for the different days of the week on the $x$ axis (from Monday to Sunday) aggregated over all product-location-day combinations in the test period, for our negative binomial model (a) and a simpler Poisson model for comparison (b).}
 \end{center}
 \end{figure}
@@ -478,8 +478,8 @@ In a real-live situation with a live supply chain project for a customer, a more
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{figs/invquant_yhat_mean_nbinom}
-\includegraphics[width=4cm]{figs/invquant_yhat_mean_poisson}
+\includegraphics[width=4cm]{invquant_yhat_mean_nbinom}
+\includegraphics[width=4cm]{invquant_yhat_mean_poisson}
 \caption{\label{fig:invquant_mean} Inverse quantile profile plot for mean predictions on the $x$ axis aggregated over all product-location-day combinations in the test period, for our negative binomial model (a) and a simpler Poisson model for comparison (b).}
 \end{center}
 \end{figure}
@@ -596,8 +596,8 @@ In many cases, scatter plots are used to study the behavior of two distributions
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=4cm]{figs/marginal}
-\includegraphics[width=4cm]{figs/scatter}
+\includegraphics[width=4cm]{marginal}
+\includegraphics[width=4cm]{scatter}
 \caption{\label{fig:scatter} Marginal distributions and scatter plot of variables $X$ and $Y$.}
 \end{center}
 \end{figure}
@@ -606,7 +606,7 @@ Although the simple linear correlation between $X$ and $Y$ is apparent in the sc
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=8cm]{figs/profile}
+\includegraphics[width=8cm]{profile}
 \caption{\label{fig:profile} Profile histogram of variables $X$ and $Y$.}
 \end{center}
 \end{figure}
